@@ -35,9 +35,38 @@ export default function BoardCanvas({
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [lastPan, setLastPan] = useState({ x: 0, y: 0 })
+  const [darkMode, setDarkMode] = useState(false)
 
-  const CANVAS_WIDTH = 2000
-  const CANVAS_HEIGHT = 2000
+  const CANVAS_WIDTH = 3000
+  const CANVAS_HEIGHT = 3000
+
+  // Helper to get CSS variable value
+  const getCSSVar = (name: string): string => {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+    // Convert OKLCH to usable format
+    if (value.startsWith('oklch')) {
+      return `oklch(${value.slice(6, -1)})`
+    }
+    return value
+  }
+
+  // Watch for dark mode changes
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setDarkMode(document.documentElement.classList.contains('dark'))
+    }
+    
+    checkDarkMode() // Initial check
+    
+    // Watch for changes
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    })
+    
+    return () => observer.disconnect()
+  }, [])
 
   const RESOURCE_COLORS: Record<Resource, string> = {
     [Resource.Wood]: '#2D5016',  // Deep forest green
@@ -663,15 +692,8 @@ export default function BoardCanvas({
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')!
     
-    // Clear canvas with ocean-themed gradient
-    const gradient = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, 0,
-      canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 2
-    )
-    gradient.addColorStop(0, '#2c4d6d')
-    gradient.addColorStop(0.7, '#1e3a5f')
-    gradient.addColorStop(1, '#0a1929')
-    ctx.fillStyle = gradient
+    // Clear canvas with proper background
+    ctx.fillStyle = darkMode ? '#18181b' : '#fafafa' // zinc-900 for dark, zinc-50 for light
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     
     // Save context state
@@ -712,7 +734,7 @@ export default function BoardCanvas({
     
     // Restore context state
     ctx.restore()
-  }, [board, pan, selectedHex, selectedVertex, selectedEdge, viewOptions])
+  }, [board, pan, selectedHex, selectedVertex, selectedEdge, viewOptions, darkMode])
 
   return (
     <div className="w-full h-full flex items-center justify-center overflow-hidden">

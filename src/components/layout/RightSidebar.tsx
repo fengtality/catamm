@@ -1,39 +1,42 @@
 
 import React from 'react'
-import PlayerInfo from '../player/PlayerInfo'
-import AMMMarkets from '../player/AMMMarkets'
-import QuickActions from '../player/QuickActions'
-import { Resource } from '@/types'
+import Leaderboard from '../player/Leaderboard'
+import PlayerResources from '../player/PlayerResources'
+import { GameState } from '../shared/types'
 
 interface RightSidebarProps {
+  gameState: GameState
   currentPlayer: number
-  playerResources: Record<number, Record<Resource, number>>
-  onQuickAction: (action: string) => void
+  playerResources: Record<number, Record<string, number>>
 }
 
 export default function RightSidebar({
+  gameState,
   currentPlayer,
-  playerResources,
-  onQuickAction
+  playerResources
 }: RightSidebarProps) {
+  // Mock VP data - in real implementation, this would come from game state
+  const mockPlayers = [
+    { playerId: 1, totalVP: 7, settlements: 3, cities: 1, largestArmy: 2, longestRoad: 0 },
+    { playerId: 2, totalVP: 5, settlements: 3, cities: 1, largestArmy: 0, longestRoad: 0 },
+    { playerId: 3, totalVP: 4, settlements: 2, cities: 1, largestArmy: 0, longestRoad: 0 },
+    { playerId: 4, totalVP: 2, settlements: 2, cities: 0, largestArmy: 0, longestRoad: 0 },
+  ]
+  
   return (
     <aside className="w-80 bg-sidebar border-l border-sidebar-border flex flex-col h-full">
-      {/* Player Info */}
-      <div className="border-b border-sidebar-border">
-        <PlayerInfo
-          currentPlayer={currentPlayer}
-          resources={playerResources[currentPlayer]}
+      {/* Leaderboard */}
+      <div className="border-b border-sidebar-border flex-1 overflow-auto">
+        <Leaderboard 
+          players={mockPlayers} 
+          currentPlayer={gameState.currentPlayer}
+          currentTurn={gameState.turn}
         />
       </div>
 
-      {/* AMM Markets */}
-      <div className="flex-1 border-b border-sidebar-border overflow-auto">
-        <AMMMarkets />
-      </div>
-
-      {/* Quick Actions */}
-      <div className="p-4">
-        <QuickActions onAction={onQuickAction} />
+      {/* Player Resources */}
+      <div className="border-t border-sidebar-border">
+        <PlayerResources resources={playerResources[currentPlayer] || {}} />
       </div>
     </aside>
   )

@@ -55,6 +55,50 @@
     --shadow-2xl: 0px 1px 0px 0px hsl(0 0% 0% / 0.00);
     --tracking-normal: 0em;
     --spacing: 0.25rem;
+    
+    /* Game Canvas Colors */
+    --canvas-bg: oklch(0.98 0 0);
+    
+    /* Resource colors */
+    --resource-wood: oklch(0.35 0.15 135);
+    --resource-brick: oklch(0.55 0.15 25);
+    --resource-sheep: oklch(0.65 0.15 130);
+    --resource-wheat: oklch(0.75 0.15 90);
+    --resource-ore: oklch(0.55 0 0);
+    --resource-desert: oklch(0.85 0.05 70);
+    
+    /* Player colors */
+    --player-1: oklch(0.65 0.25 29);
+    --player-2: oklch(0.5 0.2 265);
+    --player-3: oklch(0.7 0.2 70);
+    --player-4: oklch(0.95 0 0);
+    
+    /* Shadow colors */
+    --shadow-strong: oklch(0 0 0 / 0.5);
+    --shadow-medium: oklch(0 0 0 / 0.3);
+    --shadow-light: oklch(0 0 0 / 0.2);
+    
+    /* Selection colors */
+    --selection-primary: oklch(0.7 0.15 220);
+    --selection-secondary: oklch(0.8 0.1 220);
+    
+    /* Fill opacity classes */
+    --fill-opacity-10: 0.1;
+    --fill-opacity-20: 0.2;
+    --stroke-opacity-20: 0.2;
+    
+    /* Number token colors */
+    --token-bg-light: oklch(0.99 0.01 90);
+    --token-bg-mid: oklch(0.95 0.05 85);
+    --token-bg-dark: oklch(0.85 0.08 70);
+    --token-border: oklch(0.5 0.1 60);
+    --token-red: oklch(0.55 0.2 29);
+    
+    /* Misc UI colors */
+    --hex-label: oklch(0.95 0 0 / 0.7);
+    --edge-default: oklch(0.5 0 0 / 0.3);
+    --edge-perimeter: oklch(0.65 0 0 / 0.5);
+    --hex-border: oklch(0 0 0 / 0.2);
   }
 
   .dark {
@@ -102,6 +146,50 @@
     --shadow-lg: 0px 1px 0px 0px hsl(0 0% 0% / 0.00), 0px 4px 6px -1px hsl(0 0% 0% / 0.00);
     --shadow-xl: 0px 1px 0px 0px hsl(0 0% 0% / 0.00), 0px 8px 10px -1px hsl(0 0% 0% / 0.00);
     --shadow-2xl: 0px 1px 0px 0px hsl(0 0% 0% / 0.00);
+    
+    /* Game Canvas Colors - Dark Mode */
+    --canvas-bg: oklch(0.15 0 0);
+    
+    /* Resource colors - slightly adjusted for dark mode */
+    --resource-wood: oklch(0.45 0.15 135);
+    --resource-brick: oklch(0.6 0.15 25);
+    --resource-sheep: oklch(0.7 0.15 130);
+    --resource-wheat: oklch(0.8 0.15 90);
+    --resource-ore: oklch(0.6 0 0);
+    --resource-desert: oklch(0.3 0.05 70);
+    
+    /* Player colors - adjusted for dark mode */
+    --player-1: oklch(0.7 0.25 29);
+    --player-2: oklch(0.6 0.2 265);
+    --player-3: oklch(0.75 0.2 70);
+    --player-4: oklch(0.85 0 0);
+    
+    /* Shadow colors - stronger in dark mode */
+    --shadow-strong: oklch(0 0 0 / 0.7);
+    --shadow-medium: oklch(0 0 0 / 0.5);
+    --shadow-light: oklch(0 0 0 / 0.3);
+    
+    /* Selection colors - brighter in dark mode */
+    --selection-primary: oklch(0.75 0.2 220);
+    --selection-secondary: oklch(0.85 0.15 220);
+    
+    /* Fill opacity classes */
+    --fill-opacity-10: 0.1;
+    --fill-opacity-20: 0.2;
+    --stroke-opacity-20: 0.2;
+    
+    /* Number token colors - darker backgrounds */
+    --token-bg-light: oklch(0.3 0.01 90);
+    --token-bg-mid: oklch(0.25 0.05 85);
+    --token-bg-dark: oklch(0.2 0.08 70);
+    --token-border: oklch(0.6 0.1 60);
+    --token-red: oklch(0.65 0.2 29);
+    
+    /* Misc UI colors - adjusted for dark mode */
+    --hex-label: oklch(0.85 0 0 / 0.8);
+    --edge-default: oklch(0.6 0 0 / 0.3);
+    --edge-perimeter: oklch(0.7 0 0 / 0.5);
+    --hex-border: oklch(0.9 0 0 / 0.2);
   }
   body {
     letter-spacing: var(--tracking-normal);
@@ -331,4 +419,33 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* SVG fill utilities */
+.fill-hex-label {
+  fill: var(--hex-label);
+}
+
+.fill-background {
+  fill: var(--background);
+}
+
+.hover\:fill-white:hover {
+  fill: white;
+}
+
+.hover\:fill-opacity-10:hover {
+  fill-opacity: 0.1;
+}
+
+.hover\:fill-opacity-20:hover {
+  fill-opacity: 0.2;
+}
+
+.hover\:stroke-white:hover {
+  stroke: white;
+}
+
+.hover\:stroke-opacity-20:hover {
+  stroke-opacity: 0.2;
 }
