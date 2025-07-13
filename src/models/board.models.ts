@@ -155,7 +155,7 @@ export function generateHexLayout(rings: number): HexLayoutDefinition[] {
   }
   
   // Now fill in neighbor indices
-  hexes.forEach((hex, i) => {
+  hexes.forEach((hex) => {
     const neighbors: number[] = [];
     const directions = [
       { q: 1, r: 0 }, { q: 0, r: 1 }, { q: -1, r: 1 },

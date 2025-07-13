@@ -125,7 +125,7 @@ export const BoardVisualization: React.FC = () => {
     const cmd = parts[0];
     
     switch (cmd) {
-      case 'build':
+      case 'build': {
         if (parts[1] === 'settlement' && selectedVertex) {
           handleBuildSettlement(selectedVertex);
         } else if (parts[1] === 'city' && selectedVertex) {
@@ -134,6 +134,7 @@ export const BoardVisualization: React.FC = () => {
           addLogEntry('Usage: build settlement/city (select a vertex first)', 'system');
         }
         break;
+      }
       case 'help':
         addLogEntry('Available commands: build settlement/city, roll, trade, end', 'system');
         break;
@@ -149,6 +150,7 @@ export const BoardVisualization: React.FC = () => {
           turn: prev.turn + 1
         }));
         break;
+      }
       default:
         addLogEntry(`Unknown command: ${cmd}`, 'system');
     }
@@ -335,6 +337,7 @@ export const BoardVisualization: React.FC = () => {
     // Restore context state
     ctx.restore();
     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [board, selectedHex, selectedVertex, selectedEdge, viewOptions, pan]);
 
   const drawHex = (ctx: CanvasRenderingContext2D, hex: Hex, viewOptions: ViewOptions) => {
@@ -924,7 +927,7 @@ export const BoardVisualization: React.FC = () => {
     <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f0f0f0' }}>
       {/* Left Sidebar */}
       <div style={{ 
-        width: '350px', 
+        width: '700px', 
         backgroundColor: '#fff', 
         borderRight: '2px solid #333',
         display: 'flex',
@@ -935,7 +938,7 @@ export const BoardVisualization: React.FC = () => {
         <div style={{ padding: '20px', borderBottom: '1px solid #ddd' }}>
           <h3 style={{ margin: '0 0 10px 0' }}>CATAMM - Expandable Board</h3>
           <div style={{ fontSize: '14px' }}>
-            <p>Player {gameState.currentPlayer}'s Turn</p>
+            <p>Player {gameState.currentPlayer}&apos;s Turn</p>
             <p>Turn: {gameState.turn}</p>
             <p>Phase: {gameState.phase}</p>
           </div>
