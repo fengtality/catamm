@@ -34,6 +34,8 @@ export default function VertexLayer({
             key={vertexId}
             vertex={vertex}
             building={building}
+            isSelected={selectedVertex === vertexId}
+            onClick={() => onVertexClick(vertexId)}
           />
         )
       })}

@@ -1,5 +1,5 @@
 import React from 'react'
-import { GlobalVertex } from '@/models/board.models'
+import { GlobalVertex, VERTEX_RADIUS, VERTEX_RADIUS_SELECTED } from '@/models/board.models'
 
 interface VertexInteractiveProps {
   vertex: GlobalVertex
@@ -15,7 +15,7 @@ export default function VertexInteractive({
   onClick
 }: VertexInteractiveProps) {
   const { x, y } = vertex.position
-  const radius = isSelected && isPortable ? 15 : 8
+  const radius = isSelected && isPortable ? VERTEX_RADIUS_SELECTED : VERTEX_RADIUS
   
   const fillColor = isSelected 
     ? isPortable 

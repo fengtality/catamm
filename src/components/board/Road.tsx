@@ -1,5 +1,5 @@
 import React from 'react'
-import { GlobalEdge, GlobalVertex } from '@/models/board.models'
+import { GlobalEdge, GlobalVertex, ROAD_WIDTH } from '@/models/board.models'
 
 interface RoadProps {
   edge: GlobalEdge
@@ -24,9 +24,9 @@ export default function Road({ edge, vertices, player }: RoadProps) {
         x2={v2.position.x}
         y2={v2.position.y}
         stroke="var(--shadow-medium)"
-        strokeWidth={10}
+        strokeWidth={ROAD_WIDTH}
         strokeLinecap="round"
-        transform="translate(2, 2)"
+        transform="translate(4, 4)"
         className="road-shadow"
       />
       
@@ -37,7 +37,7 @@ export default function Road({ edge, vertices, player }: RoadProps) {
         x2={v2.position.x}
         y2={v2.position.y}
         stroke={playerColor}
-        strokeWidth={6}
+        strokeWidth={ROAD_WIDTH}
         strokeLinecap="round"
         className="road-main"
       />
@@ -49,7 +49,7 @@ export default function Road({ edge, vertices, player }: RoadProps) {
         x2={v2.position.x + (v2.position.y - v1.position.y) * 0.02}
         y2={v2.position.y - (v2.position.x - v1.position.x) * 0.02}
         stroke={playerColor}
-        strokeWidth={1.5}
+        strokeWidth={ROAD_WIDTH * 0.25}
         strokeLinecap="round"
         opacity={0.5}
         style={{ filter: 'brightness(1.4)' }}

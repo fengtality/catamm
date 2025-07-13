@@ -226,12 +226,12 @@ function assignResourcesAndNumbers(hexes: Hex[]): void {
 }
 
 // Initialize the complete board
-export function initializeBoard(boardSize: number = 2, customHexRadius?: number, customCenter?: { x: number; y: number }): Board {
+export function initializeBoard(boardSize: number = 2, customCenter?: { x: number; y: number }): Board {
   // Generate hex layout for the given size
   const hexLayout = boardSize === 2 ? HEX_LAYOUT : generateHexLayout(boardSize);
   
-  // Use custom radius if provided, otherwise use default
-  const hexRadius = customHexRadius || HEX_RADIUS;
+  // Use constant hex radius
+  const hexRadius = HEX_RADIUS;
   const centerX = customCenter?.x || BOARD_CENTER_X;
   const centerY = customCenter?.y || BOARD_CENTER_Y;
   
@@ -363,7 +363,6 @@ export function findValidHexPositions(board: Board, vertexId: string): Array<{q:
 export function addHexToBoard(
   board: Board, 
   position: { q: number; r: number },
-  hexRadius: number = HEX_RADIUS,
   centerX: number = BOARD_CENTER_X,
   centerY: number = BOARD_CENTER_Y
 ): Board {
@@ -397,7 +396,7 @@ export function addHexToBoard(
     neighbors,
     centerX,
     centerY,
-    hexRadius
+    HEX_RADIUS
   );
   
   // Assign resource and number

@@ -36,9 +36,16 @@ export default function Leaderboard({ players, currentPlayer, currentTurn }: Lea
             <div key={player.playerId} className={`space-y-1 p-2 -mx-2 rounded ${isCurrentPlayer ? 'bg-accent' : ''}`}>
               {/* Player rank and VP */}
               <div className="flex items-center justify-between text-sm font-mono">
-                <span className="font-medium">
-                  {index + 1}. Player {player.playerId}
-                  {isCurrentPlayer && <span className="text-xs text-muted-foreground ml-2">(Current)</span>}
+                <span className="font-medium flex items-center gap-2">
+                  <span className="flex items-center gap-1">
+                    {index + 1}.
+                    <span 
+                      className="w-4 h-4 rounded border border-border"
+                      style={{ backgroundColor: `var(--player-${player.playerId})` }}
+                    />
+                    Player {player.playerId}
+                  </span>
+                  {isCurrentPlayer && <span className="text-xs text-muted-foreground">(Current)</span>}
                 </span>
                 <span className="font-semibold">{player.totalVP}VP</span>
               </div>
@@ -46,8 +53,11 @@ export default function Leaderboard({ players, currentPlayer, currentTurn }: Lea
               {/* Progress bar */}
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${percentage}%` }}
+                  className="h-full transition-all duration-300"
+                  style={{ 
+                    width: `${percentage}%`,
+                    backgroundColor: `var(--player-${player.playerId})`
+                  }}
                 />
               </div>
               

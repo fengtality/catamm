@@ -1,4 +1,5 @@
 import React from 'react'
+import { ROBBER_SIZE } from '@/models/board.models'
 
 interface RobberProps {
   x: number
@@ -6,10 +7,10 @@ interface RobberProps {
 }
 
 export default function Robber({ x, y }: RobberProps) {
-  const height = 40
-  const baseWidth = 25
-  const topWidth = 15
-  const headRadius = 12
+  const height = ROBBER_SIZE
+  const baseWidth = ROBBER_SIZE * 0.625  // 50 for size 80
+  const topWidth = ROBBER_SIZE * 0.375   // 30 for size 80
+  const headRadius = ROBBER_SIZE * 0.3   // 24 for size 80
 
   return (
     <g className="robber">
@@ -36,7 +37,7 @@ export default function Robber({ x, y }: RobberProps) {
         `}
         fill="var(--foreground)"
         stroke="var(--background)"
-        strokeWidth={1.5}
+        strokeWidth={3}
       />
       
       {/* Body highlight */}
@@ -47,7 +48,7 @@ export default function Robber({ x, y }: RobberProps) {
           L ${x - baseWidth/3} ${y + height/3}
         `}
         stroke="var(--background)"
-        strokeWidth={1.5}
+        strokeWidth={3}
         fill="none"
         opacity={0.3}
       />
@@ -59,14 +60,14 @@ export default function Robber({ x, y }: RobberProps) {
         r={headRadius}
         fill="var(--foreground)"
         stroke="var(--background)"
-        strokeWidth={1.5}
+        strokeWidth={3}
       />
       
       {/* Head highlight */}
       <circle
-        cx={x - 3}
-        cy={y - height/2 - headRadius/2 - 3}
-        r={3}
+        cx={x - 6}
+        cy={y - height/2 - headRadius/2 - 6}
+        r={6}
         fill="var(--background)"
         opacity={0.3}
       />

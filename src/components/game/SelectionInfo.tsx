@@ -1,6 +1,6 @@
 
 import React from 'react'
-import { Board } from '@/models/board.models'
+import { Board, BuildingType } from '@/models/board.models'
 import { getPortableVertices, getPerimeterEdges } from '@/models/board.initialization'
 
 interface SelectionInfoProps {
@@ -49,6 +49,35 @@ export default function SelectionInfo({
     if (selectedVertex && board) {
       const vertex = board.globalVertices.get(selectedVertex)
       if (!vertex) return null
+      
+      // Check if this vertex has a building
+      const building = board.buildings.get(selectedVertex)
+      if (building) {
+        return (
+          <div className="flex items-center space-x-6 text-sm font-mono">
+            <h4 className="font-semibold">
+              {building.type === BuildingType.Settlement ? 'Settlement' : 'City'}
+            </h4>
+            <div className="flex items-center space-x-2">
+              <span className="text-muted-foreground">Owner:</span>
+              <span className="font-medium">Player {building.player}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-muted-foreground">Victory Points:</span>
+              <span className="font-medium">{building.type === BuildingType.Settlement ? '1' : '2'}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-muted-foreground">Location:</span>
+              <span className="font-medium">Vertex {selectedVertex}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-muted-foreground">Adjacent Hexes:</span>
+              <span className="font-medium">{vertex.hexes.map(h => h.hexIndex).join(', ')}</span>
+            </div>
+          </div>
+        )
+      }
+      
       const isPortable = getPortableVertices(board).includes(selectedVertex)
       
       // For portable vertices, show AMM info

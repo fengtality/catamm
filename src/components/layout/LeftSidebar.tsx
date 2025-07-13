@@ -8,12 +8,14 @@ interface LeftSidebarProps {
   gameLog: GameLogEntry[]
   onCommand: (command: string) => void
   onQuickAction: (action: string) => void
+  currentPlayer?: number
 }
 
 export default function LeftSidebar({
   gameLog,
   onCommand,
-  onQuickAction
+  onQuickAction,
+  currentPlayer
 }: LeftSidebarProps) {
   return (
     <aside className="w-96 bg-sidebar border-r border-sidebar-border flex flex-col h-full">
@@ -24,7 +26,7 @@ export default function LeftSidebar({
 
       {/* Command Input */}
       <div className="border-t border-sidebar-border">
-        <CommandInput onSubmit={onCommand} onQuickAction={onQuickAction} />
+        <CommandInput onSubmit={onCommand} onQuickAction={onQuickAction} currentPlayer={currentPlayer} />
       </div>
     </aside>
   )

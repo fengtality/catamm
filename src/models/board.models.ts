@@ -4,6 +4,30 @@
 
 import { Resource } from '@/types';
 
+// Constants for board setup
+export const BOARD_CENTER_X = 1500;
+export const BOARD_CENTER_Y = 1500;
+export const HEX_RADIUS = 210; // Doubled from 105
+
+// SVG canvas dimensions
+export const CANVAS_WIDTH = 3000;
+export const CANVAS_HEIGHT = 3000;
+
+// UI element sizes (scaled proportionally)
+export const NUMBER_TOKEN_RADIUS = 64; // Doubled from 32
+export const NUMBER_TOKEN_FONT_SIZE = 56; // Doubled from 28
+export const NUMBER_TOKEN_TEXT_OFFSET = 6; // Doubled from 3
+export const NUMBER_TOKEN_SHADOW_OFFSET = 6; // Doubled from 3
+export const NUMBER_TOKEN_DOT_SPACING = 14; // Doubled from 7
+export const NUMBER_TOKEN_DOT_Y_OFFSET = 36; // Doubled from 18
+export const NUMBER_TOKEN_DOT_RADIUS = 4; // Doubled from 2
+export const BUILDING_SETTLEMENT_SIZE = 48; // Doubled from 12
+export const BUILDING_CITY_SIZE = 48; // Same width as settlement
+export const ROAD_WIDTH = 12; // Doubled from 6
+export const VERTEX_RADIUS = 16; // Doubled from 8
+export const VERTEX_RADIUS_SELECTED = 30; // Doubled from 15
+export const ROBBER_SIZE = 80; // Height of robber figure
+
 // Represents a vertex-based edge (between two vertices)
 export type Edge = [number, number]; // e.g., [0, 1] for top edge
 
@@ -100,11 +124,6 @@ export interface HexLayoutDefinition {
   r: number;
   neighborIndices: number[]; // just the indices of neighboring hexes
 }
-
-// Constants for board setup
-export const BOARD_CENTER_X = 450;
-export const BOARD_CENTER_Y = 350;
-export const HEX_RADIUS = 70; // Increased for better visibility
 
 // Generate hex layout dynamically based on number of rings
 export function generateHexLayout(rings: number): HexLayoutDefinition[] {

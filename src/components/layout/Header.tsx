@@ -78,7 +78,7 @@ export default function Header({ viewOptions, onViewOptionsChange, onNewBoard, o
                 onViewOptionsChange({ ...viewOptions, showHexNumbers: checked })
               }
             >
-              Show Hex Numbers
+              Show Hex Index
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
               checked={viewOptions.showPortable}

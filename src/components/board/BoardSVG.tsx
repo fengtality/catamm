@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react'
-import { Board } from '@/models/board.models'
+import { Board, CANVAS_WIDTH, CANVAS_HEIGHT } from '@/models/board.models'
 import { ViewOptions } from '../shared/types'
 import HexGrid from './HexGrid'
 import EdgeLayer from './EdgeLayer'
@@ -28,7 +28,7 @@ export default function BoardSVG({
   onEdgeClick
 }: BoardSVGProps) {
   const svgRef = useRef<SVGSVGElement>(null)
-  const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 3000, height: 3000 })
+  const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: CANVAS_WIDTH, height: CANVAS_HEIGHT })
   const [isPanning, setIsPanning] = useState(false)
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
   const [scale, setScale] = useState(1)
@@ -83,8 +83,8 @@ export default function BoardSVG({
       const svgY = viewBox.y + (mouseY / rect.height) * viewBox.height
 
       // Calculate new viewBox to zoom around mouse position
-      const newWidth = 3000 / newScale
-      const newHeight = 3000 / newScale
+      const newWidth = CANVAS_WIDTH / newScale
+      const newHeight = CANVAS_HEIGHT / newScale
       const newX = svgX - (mouseX / rect.width) * newWidth
       const newY = svgY - (mouseY / rect.height) * newHeight
 
@@ -114,7 +114,7 @@ export default function BoardSVG({
     <div className="w-full h-full">
       <svg
         ref={svgRef}
-        className="w-full h-full border border-border bg-card cursor-grab active:cursor-grabbing"
+        className="w-full h-full cursor-grab active:cursor-grabbing"
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}

@@ -1,4 +1,13 @@
 import React from 'react'
+import { 
+  NUMBER_TOKEN_RADIUS,
+  NUMBER_TOKEN_FONT_SIZE,
+  NUMBER_TOKEN_TEXT_OFFSET,
+  NUMBER_TOKEN_SHADOW_OFFSET,
+  NUMBER_TOKEN_DOT_SPACING,
+  NUMBER_TOKEN_DOT_Y_OFFSET,
+  NUMBER_TOKEN_DOT_RADIUS
+} from '@/models/board.models'
 
 interface HexNumberProps {
   x: number
@@ -20,14 +29,14 @@ export default function HexNumber({ x, y, number }: HexNumberProps) {
   }
   
   const dots = getProbabilityDots(number)
-  const radius = 32 // Larger radius for better visibility
+  const radius = NUMBER_TOKEN_RADIUS
 
   return (
     <g className="hex-number">
       {/* Clean shadow */}
       <circle
         cx={x}
-        cy={y + 3}
+        cy={y + NUMBER_TOKEN_SHADOW_OFFSET}
         r={radius}
         fill="var(--shadow-light)"
       />
@@ -45,12 +54,12 @@ export default function HexNumber({ x, y, number }: HexNumberProps) {
       {/* Number text */}
       <text
         x={x}
-        y={y - 3}
+        y={y - NUMBER_TOKEN_TEXT_OFFSET}
         textAnchor="middle"
         dominantBaseline="central"
         fill={isHighProbability ? 'var(--destructive)' : 'var(--foreground)'}
         style={{ 
-          fontSize: '28px',
+          fontSize: `${NUMBER_TOKEN_FONT_SIZE}px`,
           fontWeight: 'bold',
           fontFamily: 'var(--font-mono)',
           pointerEvents: 'none'
@@ -64,9 +73,9 @@ export default function HexNumber({ x, y, number }: HexNumberProps) {
         {Array.from({ length: dots }, (_, i) => (
           <circle
             key={i}
-            cx={x + (i - (dots - 1) / 2) * 7}
-            cy={y + 18}
-            r={2}
+            cx={x + (i - (dots - 1) / 2) * NUMBER_TOKEN_DOT_SPACING}
+            cy={y + NUMBER_TOKEN_DOT_Y_OFFSET}
+            r={NUMBER_TOKEN_DOT_RADIUS}
             fill={isHighProbability ? 'var(--destructive)' : 'var(--muted-foreground)'}
           />
         ))}

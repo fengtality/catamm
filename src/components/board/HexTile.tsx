@@ -1,5 +1,5 @@
 import React from 'react'
-import { Hex } from '@/models/board.models'
+import { Hex, HEX_RADIUS } from '@/models/board.models'
 import { Resource } from '@/types'
 import HexShape from './HexShape'
 import HexNumber from './HexNumber'
@@ -25,14 +25,6 @@ export default function HexTile({
 
   return (
     <g className="hex-tile" onClick={onClick}>
-      {/* Shadow for depth */}
-      <polygon
-        points={points}
-        fill="black"
-        opacity={0.2}
-        transform="translate(3, 3)"
-      />
-      
       {/* Main hex shape */}
       <HexShape
         points={points}
@@ -50,13 +42,18 @@ export default function HexTile({
         className={isSelected ? 'animate-pulse' : ''}
       />
       
-      {/* Hex index (debug) */}
+      {/* Hex index */}
       {showNumber && (
         <text
           x={hex.position.x}
-          y={hex.position.y + 35}
+          y={hex.position.y - HEX_RADIUS + 30}
           textAnchor="middle"
-          className="fill-hex-label text-sm font-mono font-semibold"
+          fill="white"
+          stroke="black"
+          strokeWidth="1"
+          fontSize="32"
+          fontWeight="bold"
+          fontFamily="monospace"
           style={{ pointerEvents: 'none' }}
         >
           {hex.index}
