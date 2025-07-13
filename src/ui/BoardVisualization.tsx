@@ -21,6 +21,7 @@ const RESOURCE_COLORS: Record<Resource, string> = {
 const PLAYER_COLORS = ['#FF0000', '#0000FF', '#FFA500', '#FFFFFF'];
 
 // Get number of probability dots for a number token
+// Note: 7 is not included - it's reserved for the robber
 function getProbabilityDots(number: number): number {
   const dotMap: Record<number, number> = {
     2: 1,
@@ -39,7 +40,7 @@ function getProbabilityDots(number: number): number {
 
 interface ViewOptions {
   showVertexNumbers: boolean;
-  showPerimeter: boolean;
+  showPortable: boolean; // Show portable vertices (between 2 hexes on perimeter)
   boardSize: number; // Number of rings from center (2-5)
 }
 
@@ -63,7 +64,7 @@ export const BoardVisualization: React.FC = () => {
   const [selectedVertex, setSelectedVertex] = useState<string | null>(null);
   const [viewOptions, setViewOptions] = useState<ViewOptions>({
     showVertexNumbers: true,
-    showPerimeter: true,
+    showPortable: true,
     boardSize: 2  // Start with 2 rings for discovery gameplay
   });
   const [gameLog, setGameLog] = useState<GameLogEntry[]>([]);
@@ -397,42 +398,53 @@ export const BoardVisualization: React.FC = () => {
         }
       }
       
-      // Determine if this is a perimeter vertex
-      const isPerimeter = viewOptions.showPerimeter && 
-        board && getPerimeterVertices(board).includes(globalId);
+      // Determine if this is a portable vertex
+      const isPortable = viewOptions.showPortable && 
+        board && getPortableVertices(board).includes(globalId);
       
-      // Only draw vertex circles for selected hex or if showing perimeter
+      // Only draw vertex circles for selected hex or if showing portable
       const isSelectedHex = selectedHex === hex.index;
-      const shouldDrawCircle = isSelectedHex || isPerimeter || selectedVertex === globalId;
+      const shouldDrawCircle = isSelectedHex || isPortable || selectedVertex === globalId;
       
       if (shouldDrawCircle) {
+        // Check if this is the selected portable vertex
+        const isSelectedPortable = selectedVertex === globalId && isPortable;
+        
         // Draw vertex circle
         ctx.beginPath();
-        ctx.arc(x, y, 8, 0, 2 * Math.PI);
+        const radius = isSelectedPortable ? 15 : 8; // Larger radius for selected portable
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
         
-        if (selectedVertex === globalId) {
+        if (isSelectedPortable) {
+          ctx.fillStyle = '#00FF00'; // Bright green for selected portable
+        } else if (selectedVertex === globalId) {
           ctx.fillStyle = '#FFD700';
-        } else if (isPerimeter) {
-          ctx.fillStyle = '#FF6B6B';
+        } else if (isPortable) {
+          ctx.fillStyle = '#00FF00'; // Green for portable vertices
         } else {
           ctx.fillStyle = '#FFF';
         }
         ctx.fill();
         
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = isSelectedPortable ? '#00CC00' : '#333';
+        ctx.lineWidth = isSelectedPortable ? 3 : 1;
         ctx.stroke();
         
-        // Only draw vertex number/ID for selected hex
-        if (isSelectedHex) {
+        // Draw labels
+        if (isSelectedPortable) {
+          // Draw "P" label for selected portable vertex
+          ctx.fillStyle = '#FFF';
+          ctx.font = 'bold 16px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('P', x, y);
+        } else if (isSelectedHex && viewOptions.showVertexNumbers) {
+          // Draw vertex number for selected hex
           ctx.fillStyle = '#000';
           ctx.font = 'bold 10px Arial';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          
-          if (viewOptions.showVertexNumbers) {
-            ctx.fillText(index.toString(), x, y);
-          }
+          ctx.fillText(index.toString(), x, y);
         }
       }
     });
@@ -453,9 +465,9 @@ export const BoardVisualization: React.FC = () => {
       ctx.moveTo(v1.position.x, v1.position.y);
       ctx.lineTo(v2.position.x, v2.position.y);
       
-      if (viewOptions.showPerimeter && perimeterEdges.has(id)) {
-        ctx.strokeStyle = '#FF6B6B';
-        ctx.lineWidth = 3;
+      if (viewOptions.showPortable && perimeterEdges.has(id)) {
+        ctx.strokeStyle = '#999'; // Dimmer color for perimeter edges
+        ctx.lineWidth = 2;
       } else {
         ctx.strokeStyle = '#666';
         ctx.lineWidth = 1;
@@ -774,10 +786,10 @@ export const BoardVisualization: React.FC = () => {
             <label style={{ marginRight: '20px' }}>
               <input
                 type="checkbox"
-                checked={viewOptions.showPerimeter}
-                onChange={(e) => setViewOptions({...viewOptions, showPerimeter: e.target.checked})}
+                checked={viewOptions.showPortable}
+                onChange={(e) => setViewOptions({...viewOptions, showPortable: e.target.checked})}
               />
-              Highlight Perimeter
+              Show Portable Vertices
             </label>
             <label style={{ marginRight: '20px' }}>
               Board Size: 

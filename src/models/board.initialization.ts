@@ -167,13 +167,14 @@ function assignResourcesAndNumbers(hexes: Hex[]): void {
   const numberTokens: number[] = [];
   
   // Probability weights based on dice combinations (out of 36)
+  // Note: 7 is excluded - it's reserved for the robber
   const probabilityWeights: Record<number, number> = {
     2: 1,
     3: 2,
     4: 3,
     5: 4,
     6: 5,
-    8: 5,  // Note: 7 is skipped (robber)
+    8: 5,
     9: 4,
     10: 3,
     11: 2,
@@ -259,7 +260,6 @@ export function initializeBoard(boardSize: number = 2, customHexRadius?: number,
   
   return {
     hexes,
-    ports: [], // Empty ports array for now
     globalVertices,
     globalEdges,
     robberLocation,
@@ -404,7 +404,7 @@ export function addHexToBoard(
   const resources = [Resource.Wood, Resource.Brick, Resource.Sheep, Resource.Wheat, Resource.Ore];
   newHex.resource = resources[Math.floor(Math.random() * resources.length)];
   
-  // Generate number token from probability distribution
+  // Generate number token from probability distribution (no 7 - reserved for robber)
   const numberOptions = [2, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 
                          8, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 11, 11, 12];
   newHex.numberToken = numberOptions[Math.floor(Math.random() * numberOptions.length)];
@@ -418,7 +418,6 @@ export function addHexToBoard(
   
   return {
     hexes: newHexes,
-    ports: board.ports,
     globalVertices: newGlobalVertices,
     globalEdges: newGlobalEdges,
     robberLocation: board.robberLocation,

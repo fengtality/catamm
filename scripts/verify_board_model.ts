@@ -13,7 +13,6 @@ console.log(`- Global edges: ${board.globalEdges.size}`);
 console.log(`- Perimeter edges: ${getPerimeterEdges(board).length}`);
 console.log(`- Perimeter vertices: ${getPerimeterVertices(board).length}`);
 console.log(`- Portable vertices: ${getPortableVertices(board).length}`);
-console.log(`- Ports: ${board.ports.length}`);
 
 // Verify hex numbering pattern
 console.log('\nHex Numbering (Center = 0, clockwise from East):');

@@ -68,27 +68,6 @@ export interface GlobalEdge {
   }>; // 1 or 2 hexes share an edge
 }
 
-// Port types
-export enum PortType {
-  ThreeToOne = '3:1',
-  TwoToOne = '2:1'
-}
-
-// Updated port structure
-export interface Port {
-  id: number; // 0-8
-  type: PortType;
-  resource?: Resource; // Only for 2:1 ports
-  location: {
-    hexIndex: number;
-    edge?: Edge; // For single-edge ports
-    vertex?: number; // For vertex ports (where two edges meet)
-  };
-  position: {
-    x: number; // pixel coordinates for rendering
-    y: number;
-  };
-}
 
 // Building types
 export enum BuildingType {
@@ -106,7 +85,6 @@ export interface Building {
 // Complete board state
 export interface Board {
   hexes: Hex[];
-  ports: Port[];
   globalVertices: Map<string, GlobalVertex>;
   globalEdges: Map<string, GlobalEdge>;
   robberLocation: number; // hex index where robber is located
@@ -229,84 +207,6 @@ export const HEX_LAYOUT: HexLayoutDefinition[] = [
   { index: 18, q: 2, r: -2, neighborIndices: [6, 7, 17] }             // SE of 17, completing the ring
 ];
 
-// Define port placements based on perimeter edges
-export const PORT_PLACEMENTS: Array<{
-  id: number;
-  type: PortType;
-  resource?: Resource;
-  hexIndex: number;
-  edge?: Edge;
-  vertex?: number;
-}> = [
-  // Port 0: Top edge of hex 13 (single edge)
-  {
-    id: 0,
-    type: PortType.ThreeToOne,
-    hexIndex: 13,
-    edge: [0, 1]
-  },
-  // Port 1: Vertex between hex 11 and hex 18 (vertex port)
-  {
-    id: 1,
-    type: PortType.TwoToOne,
-    resource: Resource.Wood,
-    hexIndex: 11,
-    vertex: 1
-  },
-  // Port 2: Right edge of hex 8 (single edge)
-  {
-    id: 2,
-    type: PortType.ThreeToOne,
-    hexIndex: 8,
-    edge: [1, 2]
-  },
-  // Port 3: Vertex between hex 9 and hex 17 (vertex port)
-  {
-    id: 3,
-    type: PortType.TwoToOne,
-    resource: Resource.Brick,
-    hexIndex: 9,
-    vertex: 3
-  },
-  // Port 4: Bottom edge of hex 17 (single edge)
-  {
-    id: 4,
-    type: PortType.ThreeToOne,
-    hexIndex: 17,
-    edge: [3, 4]
-  },
-  // Port 5: Vertex between hex 16 and hex 15 (vertex port)
-  {
-    id: 5,
-    type: PortType.TwoToOne,
-    resource: Resource.Sheep,
-    hexIndex: 16,
-    vertex: 4
-  },
-  // Port 6: Left edge of hex 14 (single edge)
-  {
-    id: 6,
-    type: PortType.TwoToOne,
-    resource: Resource.Wheat,
-    hexIndex: 14,
-    edge: [4, 5]
-  },
-  // Port 7: Vertex between hex 12 and hex 13 (vertex port)
-  {
-    id: 7,
-    type: PortType.TwoToOne,
-    resource: Resource.Ore,
-    hexIndex: 12,
-    vertex: 0
-  },
-  // Port 8: Top-left edge of hex 10 (single edge)
-  {
-    id: 8,
-    type: PortType.ThreeToOne,
-    hexIndex: 10,
-    edge: [5, 0]
-  }
-];
 
 // Helper functions
 export function getVertexAngle(vertexIndex: number): number {
