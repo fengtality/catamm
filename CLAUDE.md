@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CATAMM (Catan + AMM) is an innovative board game that combines the classic mechanics of Settlers of Catan with Automated Market Maker (AMM) trading systems. Instead of trading resources through banks or other players, players interact with AMM pools that dynamically price resource exchanges.
 
+The game uses a fixed 2D hexagonal board with 3 rings (37 hexes total), similar to the standard Settlers of Catan board. Players can build AMM ports on portable vertices around the board.
+
 ## Current Project Status
 
 This is an exploratory repository focused on:
@@ -52,10 +54,9 @@ catamm/
 - Trading fees: 0% for port owners, 10% for others
 
 ### Board Layout
-- Standard 19-hex Catan board (3-4-5-4-3 pattern)
-- 9 ports distributed around the perimeter:
-  - 3 single-edge ports (positions 0, 10, 20 on 30-edge perimeter)
-  - 6 double-edge ports (evenly distributed between single ports)
+- Fixed 2D hexagonal board with 3 rings (37 hexes total)
+- Standard hex pattern similar to Settlers of Catan
+- Players can build AMM ports on portable vertices
 - Ports ARE the AMM markets (not separate entities)
 
 ### Ghost Ship Mechanics

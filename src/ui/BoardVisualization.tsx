@@ -80,7 +80,7 @@ export const BoardVisualization: React.FC = () => {
     showVertices: true,
     showHexNumbers: true,
     showPortable: true,
-    boardSize: 2  // Start with 2 rings for discovery gameplay
+    boardSize: 3  // Start with 3 rings (37 hexes)
   });
   const [gameLog, setGameLog] = useState<GameLogEntry[]>([]);
   const [commandInput, setCommandInput] = useState('');
@@ -939,7 +939,7 @@ export const BoardVisualization: React.FC = () => {
     <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f0f0f0' }}>
       {/* Left Sidebar */}
       <div style={{ 
-        width: '700px', 
+        width: '1400px', 
         backgroundColor: '#fff', 
         borderRight: '2px solid #333',
         display: 'flex',
