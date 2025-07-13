@@ -20,47 +20,41 @@ export default function HexNumber({ x, y, number }: HexNumberProps) {
   }
   
   const dots = getProbabilityDots(number)
-  const textColor = isHighProbability ? 'var(--token-red)' : `rgba(0, 0, 0, ${0.3 + dots * 0.15})`
+  const radius = 32 // Larger radius for better visibility
 
   return (
     <g className="hex-number">
-      {/* Token background shadow */}
+      {/* Clean shadow */}
       <circle
         cx={x}
-        cy={y + 2}
-        r={22}
-        fill="black"
-        opacity={0.2}
+        cy={y + 3}
+        r={radius}
+        fill="var(--shadow-light)"
       />
       
-      {/* Token background */}
+      {/* Main circle background */}
       <circle
         cx={x}
         cy={y}
-        r={22}
-        fill="var(--token-bg-light)"
-        stroke="var(--token-border)"
-        strokeWidth={2}
-      />
-      
-      {/* Token inner gradient */}
-      <circle
-        cx={x}
-        cy={y}
-        r={18}
-        fill="var(--token-bg-mid)"
-        opacity={0.6}
+        r={radius}
+        fill="var(--card)"
+        stroke="var(--border)"
+        strokeWidth={1}
       />
       
       {/* Number text */}
       <text
         x={x}
-        y={y}
+        y={y - 3}
         textAnchor="middle"
         dominantBaseline="central"
-        className="text-xl font-bold font-mono select-none"
-        fill={textColor}
-        style={{ pointerEvents: 'none' }}
+        fill={isHighProbability ? 'var(--destructive)' : 'var(--foreground)'}
+        style={{ 
+          fontSize: '28px',
+          fontWeight: 'bold',
+          fontFamily: 'var(--font-mono)',
+          pointerEvents: 'none'
+        }}
       >
         {number}
       </text>
@@ -70,11 +64,10 @@ export default function HexNumber({ x, y, number }: HexNumberProps) {
         {Array.from({ length: dots }, (_, i) => (
           <circle
             key={i}
-            cx={x + (i - (dots - 1) / 2) * 6}
-            cy={y + 12}
-            r={1.5}
-            fill={textColor}
-            opacity={0.8}
+            cx={x + (i - (dots - 1) / 2) * 7}
+            cy={y + 18}
+            r={2}
+            fill={isHighProbability ? 'var(--destructive)' : 'var(--muted-foreground)'}
           />
         ))}
       </g>

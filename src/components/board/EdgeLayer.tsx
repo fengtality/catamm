@@ -20,35 +20,33 @@ export default function EdgeLayer({
 }: EdgeLayerProps) {
   return (
     <g className="edge-layer">
-      {/* Render roads first */}
-      {Array.from(roads.entries()).map(([edgeId, player]) => {
-        const edge = edges.get(edgeId)
-        if (!edge) return null
-        
-        return (
-          <Road
-            key={edgeId}
-            edge={edge}
-            vertices={vertices}
-            player={player}
-          />
-        )
-      })}
-      
-      {/* Render interactive edges */}
+      {/* Render all edges with appropriate styling */}
       {Array.from(edges.entries()).map(([edgeId, edge]) => {
-        // Skip if this edge has a road
-        if (roads.has(edgeId)) return null
+        const hasRoad = roads.has(edgeId)
+        const player = roads.get(edgeId)
         
-        return (
-          <EdgeInteractive
-            key={edgeId}
-            edge={edge}
-            vertices={vertices}
-            isSelected={selectedEdge === edgeId}
-            onClick={() => onEdgeClick(edgeId)}
-          />
-        )
+        if (hasRoad && player !== undefined) {
+          // Render as a road
+          return (
+            <Road
+              key={edgeId}
+              edge={edge}
+              vertices={vertices}
+              player={player}
+            />
+          )
+        } else {
+          // Render as an interactive edge
+          return (
+            <EdgeInteractive
+              key={edgeId}
+              edge={edge}
+              vertices={vertices}
+              isSelected={selectedEdge === edgeId}
+              onClick={() => onEdgeClick(edgeId)}
+            />
+          )
+        }
       })}
     </g>
   )

@@ -54,7 +54,7 @@ export default function HexTile({
       {showNumber && (
         <text
           x={hex.position.x}
-          y={hex.position.y - 25}
+          y={hex.position.y + 35}
           textAnchor="middle"
           className="fill-hex-label text-sm font-mono font-semibold"
           style={{ pointerEvents: 'none' }}
@@ -67,7 +67,7 @@ export default function HexTile({
       {hex.numberToken && !hex.hasRobber && (
         <HexNumber
           x={hex.position.x}
-          y={hex.position.y + 15}
+          y={hex.position.y}
           number={hex.numberToken}
         />
       )}

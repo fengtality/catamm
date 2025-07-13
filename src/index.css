@@ -87,12 +87,7 @@
     --fill-opacity-20: 0.2;
     --stroke-opacity-20: 0.2;
     
-    /* Number token colors */
-    --token-bg-light: oklch(0.99 0.01 90);
-    --token-bg-mid: oklch(0.95 0.05 85);
-    --token-bg-dark: oklch(0.85 0.08 70);
-    --token-border: oklch(0.5 0.1 60);
-    --token-red: oklch(0.55 0.2 29);
+    /* Number token colors - removed, using theme colors instead */
     
     /* Misc UI colors */
     --hex-label: oklch(0.95 0 0 / 0.7);
@@ -178,12 +173,7 @@
     --fill-opacity-20: 0.2;
     --stroke-opacity-20: 0.2;
     
-    /* Number token colors - darker backgrounds */
-    --token-bg-light: oklch(0.3 0.01 90);
-    --token-bg-mid: oklch(0.25 0.05 85);
-    --token-bg-dark: oklch(0.2 0.08 70);
-    --token-border: oklch(0.6 0.1 60);
-    --token-red: oklch(0.65 0.2 29);
+    /* Number token colors - removed, using theme colors instead */
     
     /* Misc UI colors - adjusted for dark mode */
     --hex-label: oklch(0.85 0 0 / 0.8);

@@ -36,9 +36,9 @@ function App() {
   const [selectedEdge, setSelectedEdge] = useState<string | null>(null)
   const [viewOptions, setViewOptions] = useState<ViewOptions>({
     showVertices: true,
-    showHexNumbers: true,
+    showHexNumbers: false,
     showPortable: true,
-    boardSize: 3
+    boardSize: 2
   })
   const [gameLog, setGameLog] = useState<GameLogEntry[]>([])
   const logIdRef = useRef(0)
