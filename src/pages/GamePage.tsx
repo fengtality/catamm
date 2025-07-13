@@ -126,7 +126,7 @@ export default function GamePage() {
         />
 
         {/* Main Board Area */}
-        <div className="flex-1 flex flex-col bg-gray-100 min-w-[800px]">
+        <div className="flex-1 flex flex-col bg-muted min-w-[800px]">
           <div className="flex-1 p-8 overflow-auto flex items-center justify-center">
             <BoardCanvas
               board={board}

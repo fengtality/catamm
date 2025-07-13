@@ -11,26 +11,26 @@ export default function AMMMarkets() {
 
   return (
     <div className="p-4">
-      <h3 className="text-lg font-semibold mb-3">AMM Markets</h3>
+      <h3 className="text-lg font-mono font-semibold mb-3">AMM Markets</h3>
       <div className="space-y-3">
         {markets.map((market) => (
           <div
             key={market.pair}
-            className="p-3 bg-gray-50 rounded-lg"
+            className="p-3 bg-sidebar-accent"
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="font-medium text-sm">{market.pair}</span>
+              <span className="font-mono font-medium text-sm">{market.pair}</span>
               <span
-                className={`text-xs px-2 py-1 rounded ${
+                className={`text-xs px-2 py-1 font-mono rounded ${
                   market.status === 'Active'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-gray-200 text-gray-600'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
                 }`}
               >
                 {market.status}
               </span>
             </div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-muted-foreground font-mono">
               Liquidity: {market.liquidity}
             </div>
           </div>

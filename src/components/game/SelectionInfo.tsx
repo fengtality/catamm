@@ -17,18 +17,18 @@ export default function SelectionInfo({
   selectedEdge
 }: SelectionInfoProps) {
   return (
-    <div className="p-4 bg-gray-50 min-h-[200px]">
-      <h3 className="text-lg font-semibold mb-3">Selection Info</h3>
+    <div className="p-4 bg-sidebar-accent min-h-[200px]">
+      <h3 className="text-lg font-mono font-semibold mb-3">Selection Info</h3>
       
       {!selectedHex && !selectedVertex && !selectedEdge && (
-        <p className="text-gray-500 text-sm">
+        <p className="text-muted-foreground text-sm font-mono">
           Click on hexes, vertices, or edges to view details
         </p>
       )}
       
       {selectedHex !== null && board && (
-        <div className="space-y-2 text-sm">
-          <h4 className="font-medium text-gray-700">Hex {selectedHex}</h4>
+        <div className="space-y-2 text-sm font-mono">
+          <h4 className="font-medium">Hex {selectedHex}</h4>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <span className="font-medium">Resource:</span>{' '}
@@ -52,11 +52,11 @@ export default function SelectionInfo({
         const isPortable = getPortableVertices(board).includes(selectedVertex)
         
         return (
-          <div className="space-y-2 text-sm">
-            <h4 className="font-medium text-gray-700">
+          <div className="space-y-2 text-sm font-mono">
+            <h4 className="font-medium">
               Vertex {selectedVertex}
               {isPortable && (
-                <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                <span className="ml-2 px-2 py-1 bg-primary text-primary-foreground text-xs rounded">
                   PORTABLE
                 </span>
               )}
@@ -79,11 +79,11 @@ export default function SelectionInfo({
         const isPerimeter = getPerimeterEdges(board).includes(selectedEdge)
         
         return (
-          <div className="space-y-2 text-sm">
-            <h4 className="font-medium text-gray-700">
+          <div className="space-y-2 text-sm font-mono">
+            <h4 className="font-medium">
               Edge {selectedEdge}
               {isPerimeter && (
-                <span className="ml-2 px-2 py-1 bg-red-100 text-red-700 text-xs rounded">
+                <span className="ml-2 px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded">
                   PERIMETER
                 </span>
               )}

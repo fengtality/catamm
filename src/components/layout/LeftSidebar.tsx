@@ -24,9 +24,9 @@ export default function LeftSidebar({
   onCommand
 }: LeftSidebarProps) {
   return (
-    <aside className="w-96 bg-white border-r-2 border-gray-300 flex flex-col h-full">
+    <aside className="w-96 bg-sidebar border-r border-sidebar-border flex flex-col h-full">
       {/* Selection Info */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-sidebar-border">
         <SelectionInfo
           board={board}
           selectedHex={selectedHex}
@@ -41,7 +41,7 @@ export default function LeftSidebar({
       </div>
 
       {/* Command Input */}
-      <div className="border-t border-gray-200">
+      <div className="border-t border-sidebar-border">
         <CommandInput onSubmit={onCommand} />
       </div>
     </aside>

@@ -17,9 +17,9 @@ export default function RightSidebar({
   onQuickAction
 }: RightSidebarProps) {
   return (
-    <aside className="w-80 bg-white border-l-2 border-gray-300 flex flex-col h-full">
+    <aside className="w-80 bg-sidebar border-l border-sidebar-border flex flex-col h-full">
       {/* Player Info */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-sidebar-border">
         <PlayerInfo
           currentPlayer={currentPlayer}
           resources={playerResources[currentPlayer]}
@@ -27,7 +27,7 @@ export default function RightSidebar({
       </div>
 
       {/* AMM Markets */}
-      <div className="flex-1 border-b border-gray-200 overflow-auto">
+      <div className="flex-1 border-b border-sidebar-border overflow-auto">
         <AMMMarkets />
       </div>
 

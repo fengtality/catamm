@@ -16,17 +16,17 @@ const RESOURCE_NAMES: Record<Resource, string> = {
 }
 
 const RESOURCE_COLORS: Record<Resource, string> = {
-  [Resource.Wood]: 'bg-green-100 text-green-800',
-  [Resource.Brick]: 'bg-red-100 text-red-800',
-  [Resource.Sheep]: 'bg-lime-100 text-lime-800',
-  [Resource.Wheat]: 'bg-yellow-100 text-yellow-800',
-  [Resource.Ore]: 'bg-gray-100 text-gray-800'
+  [Resource.Wood]: 'bg-accent text-accent-foreground',
+  [Resource.Brick]: 'bg-accent text-accent-foreground',
+  [Resource.Sheep]: 'bg-accent text-accent-foreground',
+  [Resource.Wheat]: 'bg-accent text-accent-foreground',
+  [Resource.Ore]: 'bg-accent text-accent-foreground'
 }
 
 export default function PlayerInfo({ currentPlayer, resources }: PlayerInfoProps) {
   return (
     <div className="p-4">
-      <h3 className="text-lg font-semibold mb-3">
+      <h3 className="text-lg font-mono font-semibold mb-3">
         Player {currentPlayer} Resources
       </h3>
       <div className="space-y-2">
@@ -36,13 +36,13 @@ export default function PlayerInfo({ currentPlayer, resources }: PlayerInfoProps
             className="flex items-center justify-between"
           >
             <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
+              className={`px-3 py-1 text-sm font-mono font-medium ${
                 RESOURCE_COLORS[resource as Resource]
               }`}
             >
               {RESOURCE_NAMES[resource as Resource]}
             </span>
-            <span className="text-xl font-bold">{count}</span>
+            <span className="text-xl font-mono font-bold">{count}</span>
           </div>
         ))}
       </div>

@@ -725,7 +725,7 @@ export default function BoardCanvas({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className="bg-white cursor-grab active:cursor-grabbing shadow-lg rounded-lg"
+        className="bg-card cursor-grab active:cursor-grabbing shadow-none border border-border"
         style={{
           maxWidth: '100%',
           maxHeight: '100%',

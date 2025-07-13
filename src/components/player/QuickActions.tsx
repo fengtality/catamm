@@ -1,5 +1,6 @@
 
 import React from 'react'
+import { Button } from '@/components/ui/button'
 
 interface QuickActionsProps {
   onAction: (action: string) => void
@@ -8,25 +9,28 @@ interface QuickActionsProps {
 export default function QuickActions({ onAction }: QuickActionsProps) {
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-semibold mb-2">Quick Actions</h3>
-      <button
+      <h3 className="text-sm font-mono font-semibold mb-2">Quick Actions</h3>
+      <Button
         onClick={() => onAction('build-port')}
-        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        className="w-full"
+        variant="default"
       >
         Build AMM Port
-      </button>
-      <button
+      </Button>
+      <Button
         onClick={() => onAction('trade')}
-        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        className="w-full"
+        variant="secondary"
       >
         Trade Resources
-      </button>
-      <button
+      </Button>
+      <Button
         onClick={() => onAction('end-turn')}
-        className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+        className="w-full"
+        variant="outline"
       >
         End Turn
-      </button>
+      </Button>
     </div>
   )
 }

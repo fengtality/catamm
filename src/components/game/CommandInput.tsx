@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react'
+import { Input } from '@/components/ui/input'
 
 interface CommandInputProps {
   onSubmit: (command: string) => void
@@ -19,15 +20,14 @@ export default function CommandInput({ onSubmit }: CommandInputProps) {
   return (
     <div className="p-4">
       <form onSubmit={handleSubmit}>
-        <input
+        <Input
           type="text"
           value={command}
           onChange={(e) => setCommand(e.target.value)}
           placeholder="Enter command..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
       </form>
-      <div className="mt-2 text-xs text-gray-600">
+      <div className="mt-2 text-xs text-muted-foreground font-mono">
         Commands: build settlement/city, roll, trade, end
       </div>
     </div>
