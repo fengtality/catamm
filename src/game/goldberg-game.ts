@@ -4,12 +4,18 @@ import { Resource } from '@/types';
 
 // Game constants
 export const VICTORY_POINTS_TO_WIN = 10;
-export const STARTING_SOL = 1000;
 export const AMM_INITIAL_LIQUIDITY = 100;
 export const AMM_FEE_PERCENT = 0.05;
 export const AMM_FEE_CITY_PERCENT = 0.025;
-export const MAX_HEXAGONS = 180;
-export const PENTAGON_COUNT = 12;
+export const PENTAGON_COUNT = 12; // Always 12 pentagons in any Goldberg polyhedron
+
+// Configurable polyhedron sizes
+export const POLYHEDRON_SIZES = {
+  small: { hexagons: 80, deserts: 4 },    // GP(1,2) approximation
+  medium: { hexagons: 180, deserts: 9 },  // GP(1,4) 
+  large: { hexagons: 320, deserts: 16 },  // GP(2,3) approximation
+  huge: { hexagons: 500, deserts: 25 }    // GP(1,9) approximation
+};
 
 // Enums
 export enum FaceType {
@@ -51,11 +57,12 @@ export interface Face {
 
 export interface Pentagon extends Face {
   type: FaceType.Pentagon;
-  port?: {
+  port: {
     resource1: Resource;
     resource2: Resource;
-    owner: number; // Player who activated it
     pool: AMMPool;
+    activated: boolean;
+    owner?: number; // Player who first activated it
   };
 }
 
@@ -87,7 +94,6 @@ export interface Edge {
 export interface AMMPool {
   resource1Amount: number;
   resource2Amount: number;
-  solAmount: number;
   k: number; // Constant product
   totalFees: number;
   liquidityProviders: Map<number, number>; // player -> share
@@ -95,7 +101,6 @@ export interface AMMPool {
 
 export interface Player {
   id: number;
-  sol: number;
   resources: Record<Resource, number>;
   developmentCards: DevelopmentCard[];
   knightsPlayed: number;
@@ -123,14 +128,21 @@ export interface GameState {
   robberLocation: string | null;
   discoveredHexagons: number;
   activePentagons: number;
+  polyhedronSize: keyof typeof POLYHEDRON_SIZES;
+  remainingDeserts: number;
 }
 
 // Core game functions
 
-export function initializeGame(playerCount: number): GameState {
+export function initializeGame(
+  playerCount: number, 
+  polyhedronSize: keyof typeof POLYHEDRON_SIZES = 'medium'
+): GameState {
   if (playerCount < 4) {
     throw new Error('Minimum 4 players required for Goldberg CATAMM');
   }
+  
+  const config = POLYHEDRON_SIZES[polyhedronSize];
 
   const faces = new Map<string, Face>();
   const vertices = new Map<string, Vertex>();
@@ -166,14 +178,29 @@ export function initializeGame(playerCount: number): GameState {
   // Create vertices and edges for the hex cluster
   createVerticesAndEdges(faces, vertices, edges);
 
-  // Place 12 pentagons equidistantly around the board
+  // Place 12 pentagons equidistantly around the board with pre-configured ports
   const pentagonPositions = generatePentagonPositions();
+  const pentagonResources = generatePentagonResourcePairs(hexPositions, resources);
+  
   pentagonPositions.forEach((pos, index) => {
+    const resourcePair = pentagonResources[index];
     const pentagon: Pentagon = {
       id: `pent_${index}`,
       type: FaceType.Pentagon,
       position: normalizePosition(pos),
-      neighbors: []
+      neighbors: [],
+      port: {
+        resource1: resourcePair[0],
+        resource2: resourcePair[1],
+        pool: {
+          resource1Amount: 0,
+          resource2Amount: 0,
+          k: 0,
+          totalFees: 0,
+          liquidityProviders: new Map()
+        },
+        activated: false
+      }
     };
     faces.set(pentagon.id, pentagon);
   });
@@ -185,7 +212,6 @@ export function initializeGame(playerCount: number): GameState {
   for (let i = 1; i <= playerCount; i++) {
     const player: Player = {
       id: i,
-      sol: STARTING_SOL,
       resources: {
         [Resource.Wood]: 0,
         [Resource.Brick]: 0,
@@ -209,6 +235,10 @@ export function initializeGame(playerCount: number): GameState {
     players.set(i, player);
   }
 
+  // Calculate remaining deserts after initial board
+  const initialDeserts = resources.filter(r => r === null).length;
+  const remainingDeserts = config.deserts - initialDeserts;
+
   return {
     turn: 1,
     currentPlayer: 1,
@@ -220,7 +250,9 @@ export function initializeGame(playerCount: number): GameState {
     lastDiceRoll: [0, 0],
     robberLocation: `hex_${desertIndex}`,
     discoveredHexagons: 19,
-    activePentagons: 0
+    activePentagons: 0,
+    polyhedronSize,
+    remainingDeserts
   };
 }
 
@@ -389,6 +421,30 @@ function createVerticesAndEdges(
   });
 }
 
+// Generate resource pairs for pentagon ports based on board distribution
+function generatePentagonResourcePairs(
+  hexPositions: Position3D[],
+  resources: (Resource | null)[]
+): [Resource, Resource][] {
+  const pairs: [Resource, Resource][] = [];
+  const availableResources = [Resource.Wood, Resource.Brick, Resource.Sheep, Resource.Wheat, Resource.Ore];
+  
+  // Create diverse pairs ensuring all resources are represented
+  for (let i = 0; i < PENTAGON_COUNT; i++) {
+    const r1 = availableResources[i % 5];
+    const r2 = availableResources[(i + 1 + Math.floor(i / 5)) % 5];
+    pairs.push([r1, r2]);
+  }
+  
+  // Shuffle for variety
+  for (let i = pairs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+  }
+  
+  return pairs;
+}
+
 // Update pentagon neighbors to include nearby hexagons
 function updatePentagonNeighbors(faces: Map<string, Face>): void {
   const pentagons = Array.from(faces.values()).filter(f => f.type === FaceType.Pentagon);
@@ -445,13 +501,25 @@ export function generateResources(game: GameState, diceSum: number): void {
 }
 
 export function discoverHexagon(game: GameState, position: Position3D): Hexagon | null {
-  if (game.discoveredHexagons >= MAX_HEXAGONS) {
+  const config = POLYHEDRON_SIZES[game.polyhedronSize];
+  
+  if (game.discoveredHexagons >= config.hexagons) {
     return null;
   }
 
+  // Determine if this should be a desert
+  const totalHexagons = config.hexagons;
+  const discoveredRatio = game.discoveredHexagons / totalHexagons;
+  const desertsRatio = (config.deserts - game.remainingDeserts) / config.deserts;
+  
+  // Higher chance of desert if we're behind on placing them
+  const desertChance = game.remainingDeserts > 0 ? 
+    Math.max(0.05, (game.remainingDeserts / (totalHexagons - game.discoveredHexagons)) * 1.5) : 0;
+  
+  const isDesert = game.remainingDeserts > 0 && Math.random() < desertChance;
+  
   // Generate new hexagon
   const resources = [Resource.Wood, Resource.Brick, Resource.Sheep, Resource.Wheat, Resource.Ore];
-  const isDesert = Math.random() < 0.05; // 5% chance of desert
   
   const newHex: Hexagon = {
     id: `hex_${game.discoveredHexagons}`,
@@ -474,45 +542,29 @@ export function discoverHexagon(game: GameState, position: Position3D): Hexagon 
   game.faces.set(newHex.id, newHex);
   game.discoveredHexagons++;
   
+  if (isDesert) {
+    game.remainingDeserts--;
+  }
+  
   return newHex;
 }
 
 export function activatePentagon(game: GameState, pentagon: Pentagon, player: number): void {
-  // Get adjacent hexagons
-  const adjacentHexagons = pentagon.neighbors
-    .map(id => game.faces.get(id))
-    .filter(face => face?.type === FaceType.Hexagon) as Hexagon[];
-  
-  // Get resources from adjacent hexagons
-  const adjacentResources = adjacentHexagons
-    .map(hex => hex.resource)
-    .filter(r => r !== null) as Resource[];
-  
-  if (adjacentResources.length < 2) {
-    return; // Not enough resources to create trading pair
+  if (pentagon.port.activated) {
+    return; // Already activated
   }
 
-  // Randomly select 2 resources
-  const shuffled = [...adjacentResources].sort(() => Math.random() - 0.5);
-  const resource1 = shuffled[0];
-  const resource2 = shuffled[1];
-
-  // Create AMM pool
-  const pool: AMMPool = {
+  // Initialize the AMM pool with liquidity
+  pentagon.port.pool = {
     resource1Amount: AMM_INITIAL_LIQUIDITY,
     resource2Amount: AMM_INITIAL_LIQUIDITY,
-    solAmount: AMM_INITIAL_LIQUIDITY * 2,
     k: AMM_INITIAL_LIQUIDITY * AMM_INITIAL_LIQUIDITY,
     totalFees: 0,
     liquidityProviders: new Map([[player, 1.0]]) // Port owner starts with 100%
   };
 
-  pentagon.port = {
-    resource1,
-    resource2,
-    owner: player,
-    pool
-  };
+  pentagon.port.activated = true;
+  pentagon.port.owner = player;
 
   // Award first port bonus if applicable
   const playerData = game.players.get(player)!;
@@ -528,14 +580,19 @@ export function tradeWithAMM(
   pentagonId: string,
   player: number,
   inputResource: Resource,
-  inputAmount: number,
-  isInputSol: boolean
-): { outputResource: Resource | 'sol'; outputAmount: number } | null {
+  inputAmount: number
+): { outputResource: Resource; outputAmount: number } | null {
   const pentagon = game.faces.get(pentagonId) as Pentagon;
-  if (!pentagon?.port) return null;
+  if (!pentagon?.port || !pentagon.port.activated) return null;
 
   const { pool, resource1, resource2 } = pentagon.port;
   const playerData = game.players.get(player)!;
+  
+  // Must trade between the two resources of this port
+  if (inputResource !== resource1 && inputResource !== resource2) return null;
+  if (playerData.resources[inputResource] < inputAmount) return null;
+  
+  const outputResource = inputResource === resource1 ? resource2 : resource1;
   
   // Determine if player has city on this pentagon for reduced fees
   const hasCityOnPentagon = Array.from(game.vertices.values()).some(
@@ -549,61 +606,29 @@ export function tradeWithAMM(
   const inputAfterFee = inputAmount * (1 - feeRate);
   const fee = inputAmount * feeRate;
 
-  // Calculate output based on constant product formula
-  let outputAmount: number;
-  let outputResource: Resource | 'sol';
+  // Get current pool amounts
+  const inputPoolAmount = inputResource === resource1 ? pool.resource1Amount : pool.resource2Amount;
+  const outputPoolAmount = outputResource === resource1 ? pool.resource1Amount : pool.resource2Amount;
 
-  if (isInputSol) {
-    // Trading SOL for resources
-    if (playerData.sol < inputAmount) return null;
-    
-    // Simplified: assume equal SOL value for both resources
-    const resourceToTrade = Math.random() < 0.5 ? resource1 : resource2;
-    const currentResourceAmount = resourceToTrade === resource1 ? 
-      pool.resource1Amount : pool.resource2Amount;
-    
-    outputAmount = (currentResourceAmount * inputAfterFee) / 
-      (pool.solAmount + inputAfterFee);
-    outputResource = resourceToTrade;
-    
-    // Update pool
-    if (resourceToTrade === resource1) {
-      pool.resource1Amount -= outputAmount;
-    } else {
-      pool.resource2Amount -= outputAmount;
-    }
-    pool.solAmount += inputAfterFee;
-    
-    // Update player
-    playerData.sol -= inputAmount;
-    playerData.resources[outputResource] += Math.floor(outputAmount);
+  // Calculate output based on constant product formula: x * y = k
+  const newInputAmount = inputPoolAmount + inputAfterFee;
+  const newOutputAmount = pool.k / newInputAmount;
+  const outputAmount = outputPoolAmount - newOutputAmount;
+
+  // Update pool
+  if (inputResource === resource1) {
+    pool.resource1Amount = newInputAmount;
+    pool.resource2Amount = newOutputAmount;
   } else {
-    // Trading resources for SOL or other resource
-    if (inputResource !== resource1 && inputResource !== resource2) return null;
-    if (playerData.resources[inputResource] < inputAmount) return null;
-    
-    // For simplicity, trade for SOL
-    const currentResourceAmount = inputResource === resource1 ? 
-      pool.resource1Amount : pool.resource2Amount;
-    
-    outputAmount = (pool.solAmount * inputAfterFee) / 
-      (currentResourceAmount + inputAfterFee);
-    outputResource = 'sol';
-    
-    // Update pool
-    if (inputResource === resource1) {
-      pool.resource1Amount += inputAfterFee;
-    } else {
-      pool.resource2Amount += inputAfterFee;
-    }
-    pool.solAmount -= outputAmount;
-    
-    // Update player
-    playerData.resources[inputResource] -= inputAmount;
-    playerData.sol += Math.floor(outputAmount);
+    pool.resource2Amount = newInputAmount;
+    pool.resource1Amount = newOutputAmount;
   }
 
-  // Distribute fees
+  // Update player resources
+  playerData.resources[inputResource] -= inputAmount;
+  playerData.resources[outputResource] += Math.floor(outputAmount);
+
+  // Track fees for liquidity providers
   pool.totalFees += fee;
   
   return {

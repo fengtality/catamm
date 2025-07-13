@@ -44,7 +44,6 @@ function showPlayerStatus(game: any): void {
     const vp = calculateVictoryPoints(game, i);
     
     console.log(`\nPlayer ${i}: ${vp} VP`);
-    console.log(`  SOL: ${player.sol}`);
     console.log(`  Resources:`, Object.entries(player.resources)
       .filter(([_, amt]) => amt > 0)
       .map(([res, amt]) => `${res}: ${amt}`)
@@ -59,15 +58,16 @@ function showPlayerStatus(game: any): void {
 function runCompleteGameDemo() {
   console.log('=== 🌍 GOLDBERG CATAMM - COMPLETE GAME DEMO ===\n');
   
-  // Initialize 4-player game
-  const game = initializeGame(4);
+  // Initialize 4-player game with medium-sized polyhedron
+  const game = initializeGame(4, 'medium');
   
   console.log('📋 GAME RULES:');
   console.log('- Start with 19 hexagons in standard Catan layout');
-  console.log('- 12 pentagon ports positioned around the sphere');
+  console.log('- 12 pentagon ports visible with resource pairs');
+  console.log('- Medium board: up to 180 hexagons, 9 deserts total');
   console.log('- First to 10 VP wins');
-  console.log('- Expand the sphere by building on edges');
-  console.log('- Activate pentagon ports for AMM trading\n');
+  console.log('- Expand by building on edges (random tiles)');
+  console.log('- No currency - direct resource trading at ports\n');
   
   showBoardState(game);
   
@@ -132,22 +132,20 @@ function runCompleteGameDemo() {
     const player2 = game.players.get(2)!;
     player2.resources[activePentagon.port!.resource1] = 5;
     
-    console.log(`\nPlayer 2 trades 3 ${activePentagon.port!.resource1} for SOL`);
+    console.log(`\nPlayer 2 trades 3 ${activePentagon.port!.resource1} for ${activePentagon.port!.resource2}`);
     const tradeResult = tradeWithAMM(
       game,
       activePentagon.id,
       2,
       activePentagon.port!.resource1,
-      3,
-      false
+      3
     );
     
     if (tradeResult) {
       console.log(`Received: ${tradeResult.outputAmount} ${tradeResult.outputResource}`);
       console.log(`AMM Pool now has:`);
-      console.log(`  ${activePentagon.port!.resource1}: ${activePentagon.port!.pool.resource1Amount}`);
-      console.log(`  ${activePentagon.port!.resource2}: ${activePentagon.port!.pool.resource2Amount}`);
-      console.log(`  SOL: ${activePentagon.port!.pool.solAmount}`);
+      console.log(`  ${activePentagon.port!.resource1}: ${activePentagon.port!.pool.resource1Amount.toFixed(1)}`);
+      console.log(`  ${activePentagon.port!.resource2}: ${activePentagon.port!.pool.resource2Amount.toFixed(1)}`);
     }
   }
   
@@ -196,11 +194,11 @@ function runCompleteGameDemo() {
   console.log('5. SPHERE: No corners means infinite expansion possibilities');
   
   console.log('\n💡 Unique Mechanics:');
-  console.log('- Pentagon ports create dynamic trading markets');
+  console.log('- Pentagon ports visible from start with resource pairs');
+  console.log('- No currency - direct resource-to-resource trading');
   console.log('- Sphere topology eliminates position advantage');
-  console.log('- Board grows organically through player actions');
-  console.log('- AMM pools provide constant liquidity');
-  console.log('- Port ownership generates passive income from fees');
+  console.log('- Random tile discovery adds exploration element');
+  console.log('- Configurable board sizes for different game lengths');
 }
 
 // Simulate discovering and activating a pentagon

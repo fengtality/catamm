@@ -6,18 +6,22 @@ A Catan-style game played on a Goldberg polyhedron GP(1,4) sphere with 12 pentag
 ## Game Structure
 
 ### Board Topology
-- **Goldberg Polyhedron GP(1,4)**: Spherical board with no edges
-- **12 Pentagon Ports**: Fixed positions based on icosahedral symmetry
-- **Hexagon Tiles**: Start with 1, expand as players explore
-- **Maximum**: 180 hexagons (full GP(1,4) has 192 faces total)
+- **Goldberg Polyhedron**: Spherical board with no edges
+- **12 Pentagon Ports**: Fixed positions based on icosahedral symmetry (always 12)
+- **Configurable Sizes**:
+  - Small: 80 hexagons, 4 deserts
+  - Medium: 180 hexagons, 9 deserts (GP(1,4))
+  - Large: 320 hexagons, 16 deserts
+  - Huge: 500 hexagons, 25 deserts
+- **Hexagon Tiles**: Start with 19, expand through exploration
 
 ### Initial State
 - **Starting Board**: 19 hexagons in standard Catan configuration
 - **Resources**: Standard Catan distribution (4 wood, 3 brick, 4 sheep, 4 wheat, 3 ore, 1 desert)
-- **Players**: Minimum 4 players, each starts with 1000 SOL
+- **Players**: Minimum 4 players
 - **Setup Phase**: Each player places 2 settlements and 2 roads
-- **Pentagon Placement**: 12 pentagons positioned equidistantly around the starting cluster
-- **AMM Pools**: No initial pools - created when pentagons are activated
+- **Pentagon Ports**: 12 pentagons visible from start with pre-assigned resource pairs
+- **AMM Pools**: Activated when first player builds on pentagon
 
 ## Game Mechanics
 
@@ -29,11 +33,13 @@ A Catan-style game played on a Goldberg polyhedron GP(1,4) sphere with 12 pentag
   - Connects to existing board seamlessly
 
 ### Pentagon Ports (AMM Trading)
+- **Visibility**: All 12 pentagon ports visible from game start
+- **Trading Pairs**: Pre-assigned resource pairs (visible to all players)
 - **Activation**: First player to build settlement on pentagon vertex
-- **Trading Pair**: Randomly selects 2 of the 5 adjacent hexagon resources
-- **AMM Pool**: Initialized with 100 SOL and 100 of each resource
-- **Trading Fee**: 5% on all trades
+- **AMM Pool**: Initialized with 100 of each resource in the pair
+- **Trading Fee**: 5% on all trades (2.5% with city)
 - **Formula**: Constant product AMM (x * y = k)
+- **No Currency**: Direct resource-to-resource trading only
 
 ### Building Rules
 - **Settlements**: 
@@ -78,18 +84,18 @@ A Catan-style game played on a Goldberg polyhedron GP(1,4) sphere with 12 pentag
 ## AMM Trading Mechanics
 
 ### Pool Dynamics
-- Each pentagon maintains separate pools for its 2 resources
+- Each pentagon trades between exactly 2 resources (no currency)
+- Resource pairs are visible before activation
 - Players can:
-  - Swap resources through the pool
-  - Add liquidity (earn fees proportionally)
-  - Remove liquidity
+  - Swap resource A for resource B (or vice versa)
+  - Provide liquidity to earn fees
+  - Remove their liquidity
 
 ### Fee Distribution
-- 5% fee on all trades (2.5% with city)
-- Fees distributed to:
-  - 50% to liquidity providers
-  - 25% to port owner (first settler)
-  - 25% burned (removed from game)
+- 5% fee on all trades (2.5% with city on that pentagon)
+- Fees accumulate in the pool
+- Distributed proportionally to liquidity providers
+- First settler (port activator) starts with 100% LP share
 
 ## Expansion Strategy
 
@@ -108,19 +114,15 @@ A Catan-style game played on a Goldberg polyhedron GP(1,4) sphere with 12 pentag
 
 ### Resource Scarcity
 - Limited tiles mean finite resources
+- Desert tiles distributed throughout sphere (no resources)
 - AMM pools provide liquidity but at a cost
-- Strategic trading becomes crucial
+- Direct resource-to-resource trading only
 
-### SOL Economy
-- Fixed starting amount per player
-- Can be earned through:
-  - AMM fee collection
-  - Trading profits
-  - Special development cards
-- Spent on:
-  - AMM trading
-  - Development cards
-  - Building costs (optional variant)
+### Trading Strategy
+- Pentagon ports enable resource conversion
+- Each port has unique resource pair
+- Control multiple ports for trading chains
+- Fee reduction with cities incentivizes port development
 
 ## Game End Triggers
 1. **Victory Point Threshold**: First to 10 VP
