@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hex Edge Labels</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        #controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin: 0 0 20px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 0 5px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        #board-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 700px;
+        }
+        
+        canvas {
+            border: 2px solid #333;
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        #info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        #compass {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 100px;
+            height: 100px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        #compass::before {
+            content: 'N';
+            position: absolute;
+            top: 5px;
+            font-size: 16px;
+        }
+        
+        #compass::after {
+            content: '↑';
+            font-size: 24px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h1>Hex Edge Direction Labels</h1>
+        <button onclick="toggleEdgeLabels()">Toggle Edge Labels</button>
+        <button onclick="toggleHexNumbers()">Toggle Hex Numbers</button>
+    </div>
+    
+    <div id="compass"></div>
+    
+    <div id="board-container">
+        <canvas id="board" width="900" height="800"></canvas>
+    </div>
+    
+    <div id="info">
+        <p>Hexagonal grid with edge directions (N, NE, SE, S, SW, NW)</p>
+        <p>Each edge is labeled from the perspective of standing in the center of the hex</p>
+    </div>
+    
+    <script src="hex_edges.js"></script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Board Setup Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        #controls {
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        canvas {
+            border: 2px solid #333;
+            background-color: #fff;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        #info {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Catan Board Setup Test</h1>
+    
+    <div id="controls">
+        <button onclick="showHexInfo()">Show Hex Info</button>
+        <button onclick="showPortInfo()">Show Port Info</button>
+        <button onclick="toggleLabels()">Toggle Labels</button>
+    </div>
+    
+    <canvas id="board" width="800" height="700"></canvas>
+    
+    <div id="info"></div>
+    
+    <script src="board_setup.js"></script>
+    <script>
+        // Initialize board
+        const board = initializeCatanBoard(50, 400, 350);
+        const ports = getPortPlacements(board);
+        
+        // Canvas setup
+        const canvas = document.getElementById('board');
+        const ctx = canvas.getContext('2d');
+        
+        let showLabels = true;
+        
+        // Draw the board
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw hexes
+            board.hexes.forEach(hex => {
+                // Draw hex shape
+                ctx.beginPath();
+                hex.vertices.forEach((v, i) => {
+                    if (i === 0) ctx.moveTo(v.x, v.y);
+                    else ctx.lineTo(v.x, v.y);
+                });
+                ctx.closePath();
+                
+                // Different colors for perimeter vs inner hexes
+                ctx.fillStyle = hex.isPerimeter ? '#e0e0e0' : '#f0f0f0';
+                ctx.fill();
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw hex number
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(hex.index, hex.x, hex.y);
+                
+                // Draw coordinates if labels enabled
+                if (showLabels) {
+                    ctx.font = '10px Arial';
+                    ctx.fillStyle = '#666';
+                    ctx.fillText(`(${hex.q},${hex.r})`, hex.x, hex.y + 15);
+                }
+            });
+            
+            // Draw perimeter edge labels
+            if (showLabels) {
+                board.perimeter.forEach(edge => {
+                    const pos = edge.position.midpoint;
+                    
+                    ctx.save();
+                    ctx.fillStyle = 'red';
+                    ctx.font = 'bold 10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    // Background for readability
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(pos.x - 15, pos.y - 8, 30, 16);
+                    
+                    ctx.fillStyle = 'red';
+                    ctx.fillText(`${edge.hexIndex}:${edge.edge}`, pos.x, pos.y);
+                    ctx.restore();
+                });
+            }
+            
+            // Draw ports
+            ports.forEach(port => {
+                ctx.save();
+                
+                // Draw port shape
+                if (port.type === 'single') {
+                    ctx.fillStyle = '#4CAF50';
+                    ctx.fillRect(port.position.x - 20, port.position.y - 20, 40, 40);
+                } else {
+                    ctx.fillStyle = '#2196F3';
+                    ctx.fillRect(port.position.x - 35, port.position.y - 20, 70, 40);
+                }
+                
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(
+                    port.position.x - (port.type === 'single' ? 20 : 35),
+                    port.position.y - 20,
+                    port.type === 'single' ? 40 : 70,
+                    40
+                );
+                
+                // Draw port number
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`P${port.id}`, port.position.x, port.position.y);
+                
+                ctx.restore();
+            });
+        }
+        
+        // Show hex information
+        function showHexInfo() {
+            const info = document.getElementById('info');
+            const hexInfo = board.hexes[9]; // Show info for center hex
+            info.innerHTML = `
+                <h3>Sample Hex Info (Hex 9 - Center)</h3>
+                <pre>${JSON.stringify({
+                    index: hexInfo.index,
+                    coordinates: { q: hexInfo.q, r: hexInfo.r },
+                    position: { x: hexInfo.x.toFixed(2), y: hexInfo.y.toFixed(2) },
+                    neighbors: hexInfo.neighbors,
+                    edges: hexInfo.edges,
+                    isPerimeter: hexInfo.isPerimeter
+                }, null, 2)}</pre>
+            `;
+        }
+        
+        // Show port information
+        function showPortInfo() {
+            const info = document.getElementById('info');
+            const portInfo = ports.slice(0, 3); // Show first 3 ports
+            info.innerHTML = `
+                <h3>Port Placement Info (First 3 ports)</h3>
+                <pre>${JSON.stringify(portInfo.map(p => ({
+                    id: p.id,
+                    type: p.type,
+                    hexes: p.hexes,
+                    position: { 
+                        x: p.position.x.toFixed(2), 
+                        y: p.position.y.toFixed(2) 
+                    },
+                    perimeterEdges: p.perimeterEdges
+                })), null, 2)}</pre>
+            `;
+        }
+        
+        // Toggle label display
+        function toggleLabels() {
+            showLabels = !showLabels;
+            drawBoard();
+        }
+        
+        // Initial draw
+        drawBoard();
+        
+        // Log board data for inspection
+        console.log('Board Data:', board);
+        console.log('Port Placements:', ports);
+    </script>
+</body>
+</html>
