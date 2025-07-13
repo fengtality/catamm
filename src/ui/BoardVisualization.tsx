@@ -11,14 +11,24 @@ import {
 import { Resource } from '@/types';
 
 const RESOURCE_COLORS: Record<Resource, string> = {
-  [Resource.Wood]: '#8B4513',
-  [Resource.Brick]: '#B22222',
-  [Resource.Sheep]: '#90EE90',
-  [Resource.Wheat]: '#FFD700',
-  [Resource.Ore]: '#696969'
+  [Resource.Wood]: '#2D5016',  // Deep forest green
+  [Resource.Brick]: '#B8584D',  // Terracotta red
+  [Resource.Sheep]: '#83C55B',  // Pasture green
+  [Resource.Wheat]: '#F4C842',  // Golden wheat
+  [Resource.Ore]: '#7A7A7A'     // Mountain gray
 };
 
 const PLAYER_COLORS = ['#FF0000', '#0000FF', '#FFA500', '#FFFFFF'];
+
+// Helper function to adjust color brightness
+function adjustBrightness(color: string, amount: number): string {
+  const hex = color.replace('#', '');
+  const num = parseInt(hex, 16);
+  const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
+  const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount));
+  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
 
 // Get number of probability dots for a number token
 // Note: 7 is not included - it's reserved for the robber
@@ -39,7 +49,8 @@ function getProbabilityDots(number: number): number {
 }
 
 interface ViewOptions {
-  showVertexNumbers: boolean;
+  showVertices: boolean; // Show all vertices
+  showHexNumbers: boolean; // Show hex index numbers
   showPortable: boolean; // Show portable vertices (between 2 hexes on perimeter)
   boardSize: number; // Number of rings from center (2-5)
 }
@@ -62,8 +73,10 @@ export const BoardVisualization: React.FC = () => {
   const [board, setBoard] = useState<Board | null>(null);
   const [selectedHex, setSelectedHex] = useState<number | null>(null);
   const [selectedVertex, setSelectedVertex] = useState<string | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
   const [viewOptions, setViewOptions] = useState<ViewOptions>({
-    showVertexNumbers: true,
+    showVertices: true,
+    showHexNumbers: true,
     showPortable: true,
     boardSize: 2  // Start with 2 rings for discovery gameplay
   });
@@ -76,17 +89,18 @@ export const BoardVisualization: React.FC = () => {
   });
   const logIdRef = useRef(0);
   
-  // Calculate canvas size and hex size based on board size
-  const getCanvasSize = (boardSize: number) => {
-    const baseSize = 800;
-    const sizeMultiplier = 1 + (boardSize - 2) * 0.3;
-    return Math.round(baseSize * sizeMultiplier);
-  };
+  // Pan state for dragging
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [lastPan, setLastPan] = useState({ x: 0, y: 0 });
   
-  const getHexRadius = (boardSize: number) => {
-    const baseRadius = 70;
-    const radiusMultiplier = Math.max(0.4, 1 - (boardSize - 2) * 0.2);
-    return Math.round(baseRadius * radiusMultiplier);
+  // Fixed large canvas size for stability
+  const CANVAS_WIDTH = 2000;
+  const CANVAS_HEIGHT = 2000;
+  
+  const getHexRadius = () => {
+    return 70; // Always return constant hex radius
   };
   
   // Add log entry
@@ -228,9 +242,8 @@ export const BoardVisualization: React.FC = () => {
     const position = validPositions[Math.floor(Math.random() * validPositions.length)];
     
     // Get current canvas settings
-    const hexRadius = getHexRadius(viewOptions.boardSize);
-    const canvasSize = getCanvasSize(viewOptions.boardSize);
-    const center = { x: canvasSize / 2, y: canvasSize / 2 };
+    const hexRadius = getHexRadius();
+    const center = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 };
     
     // Add the new hex
     const updatedBoard = addHexToBoard(board, position, hexRadius, center.x, center.y);
@@ -243,12 +256,15 @@ export const BoardVisualization: React.FC = () => {
     );
   };
 
+  // Initialize board only when board size changes
   useEffect(() => {
-    const hexRadius = getHexRadius(viewOptions.boardSize);
-    const canvasSize = getCanvasSize(viewOptions.boardSize);
-    const center = { x: canvasSize / 2, y: canvasSize / 2 };
+    const hexRadius = getHexRadius();
+    const center = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 };
     const newBoard = initializeBoard(viewOptions.boardSize, hexRadius, center);
     setBoard(newBoard);
+    
+    // Reset pan
+    setPan({ x: 0, y: 0 });
     
     // Add initial log entry
     addLogEntry(`Board initialized with ${newBoard.hexes.length} hexes`, 'system');
@@ -269,18 +285,35 @@ export const BoardVisualization: React.FC = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d')!;
     
-    // Clear canvas
-    ctx.fillStyle = '#f8f8f8';
+    // Clear canvas with ocean-themed gradient
+    const gradient = ctx.createRadialGradient(
+      canvas.width / 2, canvas.height / 2, 0,
+      canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 2
+    );
+    gradient.addColorStop(0, '#2c4d6d');
+    gradient.addColorStop(0.7, '#1e3a5f');
+    gradient.addColorStop(1, '#0a1929');
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw edges first (so they appear under hexes)
+    // Save context state
+    ctx.save();
+    
+    // Apply pan transformation
+    ctx.translate(pan.x, pan.y);
+    
+    // Enable anti-aliasing
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Draw hexes first (filled shapes)
+    board.hexes.forEach(hex => drawHex(ctx, hex, viewOptions));
+    
+    // Draw edges on top of hexes
     drawGlobalEdges(ctx);
     
-    // Draw hexes
-    board.hexes.forEach(hex => drawHex(ctx, hex));
-    
     // Draw vertices on top
-    if (viewOptions.showVertexNumbers) {
+    if (viewOptions.showVertices) {
       // Draw non-selected hexes first
       board.hexes.forEach(hex => {
         if (hex.index !== selectedHex) {
@@ -299,12 +332,12 @@ export const BoardVisualization: React.FC = () => {
     // Draw buildings on top of everything
     drawBuildings(ctx);
     
-    // Draw info panel
-    drawInfoPanel(ctx);
+    // Restore context state
+    ctx.restore();
     
-  }, [board, selectedHex, selectedVertex, viewOptions]);
+  }, [board, selectedHex, selectedVertex, selectedEdge, viewOptions, pan]);
 
-  const drawHex = (ctx: CanvasRenderingContext2D, hex: Hex) => {
+  const drawHex = (ctx: CanvasRenderingContext2D, hex: Hex, viewOptions: ViewOptions) => {
     const { x, y } = hex.position;
     
     // Draw hexagon shape
@@ -315,68 +348,199 @@ export const BoardVisualization: React.FC = () => {
     });
     ctx.closePath();
     
-    // Fill with resource color or gray for desert
-    if (hex.resource) {
-      ctx.fillStyle = RESOURCE_COLORS[hex.resource];
+    // Apply shadow effect - enhanced for selected hex
+    if (selectedHex === hex.index) {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
     } else {
-      ctx.fillStyle = '#DEB887'; // Desert color
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 3;
+      ctx.shadowOffsetY = 3;
+    }
+    
+    // Fill with resource color - brighten if selected
+    const isSelected = selectedHex === hex.index;
+    const brightnessAdjust = isSelected ? 40 : 0;
+    
+    if (hex.resource) {
+      const baseColor = RESOURCE_COLORS[hex.resource];
+      ctx.fillStyle = adjustBrightness(baseColor, brightnessAdjust);
+    } else {
+      // Desert color
+      const desertColor = '#E5D6C3';
+      ctx.fillStyle = adjustBrightness(desertColor, brightnessAdjust);
     }
     ctx.fill();
     
-    // Highlight if selected
-    if (selectedHex === hex.index) {
-      ctx.strokeStyle = '#FF0000';
-      ctx.lineWidth = 4;
-    } else {
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 2;
-    }
+    // Reset shadow for border
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Draw subtle border for all hexes
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
     
-    // Draw hex index
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 20px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(hex.index.toString(), x, y - 15);
-    
-    // Draw resource abbreviation
-    if (hex.resource) {
-      ctx.font = '14px Arial';
-      ctx.fillStyle = '#333';
-      ctx.fillText(hex.resource.substring(0, 2), x, y + 5);
+    // Draw hex index if enabled
+    if (viewOptions.showHexNumbers) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+      ctx.fillText(hex.index.toString(), x, y - 25);
+      ctx.restore();
     }
+    
+    // Skip resource abbreviation for cleaner look
     
     // Draw number token
     if (hex.numberToken) {
+      // Draw number token with elegant design
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      
       ctx.beginPath();
-      ctx.arc(x, y + 25, 15, 0, 2 * Math.PI);
-      ctx.fillStyle = '#FFF8DC';
+      ctx.arc(x, y + 15, 22, 0, 2 * Math.PI);
+      
+      // Gradient for token
+      const tokenGradient = ctx.createRadialGradient(x - 5, y + 10, 0, x, y + 15, 22);
+      tokenGradient.addColorStop(0, '#FFFEF7');
+      tokenGradient.addColorStop(0.6, '#FFF8DC');
+      tokenGradient.addColorStop(1, '#E8D4B0');
+      ctx.fillStyle = tokenGradient;
       ctx.fill();
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 1;
+      
+      ctx.strokeStyle = '#8B6F47';
+      ctx.lineWidth = 2;
       ctx.stroke();
+      ctx.restore();
       
-      // Draw number with red for 6 and 8
-      ctx.fillStyle = hex.numberToken === 6 || hex.numberToken === 8 ? '#FF0000' : '#000';
-      ctx.font = 'bold 14px Arial';
-      ctx.fillText(hex.numberToken.toString(), x, y + 25);
-      
-      // Draw probability dots
+      // Draw number - red for 6 and 8, probability-based shading for others
+      const isRed = hex.numberToken === 6 || hex.numberToken === 8;
       const dots = getProbabilityDots(hex.numberToken);
-      if (dots > 0) {
-        ctx.font = '8px Arial';
-        ctx.fillStyle = '#666';
-        const dotString = '•'.repeat(dots);
-        ctx.fillText(dotString, x, y + 38);
+      
+      // Calculate color based on probability
+      let textColor: string;
+      if (isRed) {
+        textColor = '#C62828'; // Red for 6 and 8
+      } else {
+        // Map dots (1-4) to grayscale values
+        // 1 dot (2,12) = lightest, 4 dots (5,9) = darkest
+        const grayValue = Math.round(140 - (dots * 30)); // Range from 140 (light) to 20 (dark)
+        textColor = `rgb(${grayValue}, ${grayValue}, ${grayValue})`;
       }
+      
+      ctx.save();
+      ctx.fillStyle = textColor;
+      ctx.font = '700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+      ctx.shadowBlur = 1;
+      ctx.shadowOffsetY = 1;
+      ctx.fillText(hex.numberToken.toString(), x, y + 15);
+      ctx.restore();
+      
+      // Remove probability dots for cleaner look
     }
     
-    // Draw robber
+    // Draw robber figurine
     if (hex.hasRobber) {
-      ctx.fillStyle = '#000';
-      ctx.font = '20px Arial';
-      ctx.fillText('🏴‍☠️', x - 10, y - 30);
+      ctx.save();
+      
+      // Robber shadow
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 4;
+      ctx.shadowOffsetY = 4;
+      
+      // Draw robber body (cone shape)
+      const robberHeight = 40;
+      const robberBaseWidth = 25;
+      const robberTopWidth = 15;
+      
+      // Body gradient
+      const bodyGradient = ctx.createLinearGradient(
+        x - robberTopWidth/2, y - robberHeight/2,
+        x + robberTopWidth/2, y + robberHeight/2
+      );
+      bodyGradient.addColorStop(0, '#3A3A3A');
+      bodyGradient.addColorStop(0.3, '#2C2C2C');
+      bodyGradient.addColorStop(0.7, '#1A1A1A');
+      bodyGradient.addColorStop(1, '#000000');
+      
+      // Draw body
+      ctx.beginPath();
+      ctx.moveTo(x - robberBaseWidth/2, y + robberHeight/2);
+      ctx.lineTo(x - robberTopWidth/2, y - robberHeight/3);
+      ctx.lineTo(x - robberTopWidth/2, y - robberHeight/2);
+      ctx.lineTo(x + robberTopWidth/2, y - robberHeight/2);
+      ctx.lineTo(x + robberTopWidth/2, y - robberHeight/3);
+      ctx.lineTo(x + robberBaseWidth/2, y + robberHeight/2);
+      ctx.closePath();
+      ctx.fillStyle = bodyGradient;
+      ctx.fill();
+      
+      // Body outline
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      
+      ctx.restore();
+      
+      // Draw head (no shadow)
+      ctx.save();
+      const headRadius = 12;
+      const headY = y - robberHeight/2 - headRadius/2;
+      
+      // Head gradient
+      const headGradient = ctx.createRadialGradient(
+        x - 3, headY - 3, 0,
+        x, headY, headRadius
+      );
+      headGradient.addColorStop(0, '#4A4A4A');
+      headGradient.addColorStop(0.7, '#2C2C2C');
+      headGradient.addColorStop(1, '#1A1A1A');
+      
+      ctx.beginPath();
+      ctx.arc(x, headY, headRadius, 0, Math.PI * 2);
+      ctx.fillStyle = headGradient;
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      
+      // Add highlight on body for 3D effect
+      ctx.beginPath();
+      ctx.moveTo(x - robberTopWidth/3, y - robberHeight/3);
+      ctx.lineTo(x - robberTopWidth/4, y - robberHeight/2.5);
+      ctx.lineTo(x - robberBaseWidth/3, y + robberHeight/3);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      
+      // Add small highlight on head
+      ctx.beginPath();
+      ctx.arc(x - 3, headY - 3, 3, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.fill();
+      
+      ctx.restore();
     }
   };
 
@@ -418,7 +582,7 @@ export const BoardVisualization: React.FC = () => {
         if (isSelectedPortable) {
           ctx.fillStyle = '#00FF00'; // Bright green for selected portable
         } else if (selectedVertex === globalId) {
-          ctx.fillStyle = '#FFD700';
+          ctx.fillStyle = '#0080FF'; // Bright blue for selected vertex
         } else if (isPortable) {
           ctx.fillStyle = '#00FF00'; // Green for portable vertices
         } else {
@@ -438,7 +602,7 @@ export const BoardVisualization: React.FC = () => {
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText('P', x, y);
-        } else if (isSelectedHex && viewOptions.showVertexNumbers) {
+        } else if (isSelectedHex && viewOptions.showVertices) {
           // Draw vertex number for selected hex
           ctx.fillStyle = '#000';
           ctx.font = 'bold 10px Arial';
@@ -455,25 +619,95 @@ export const BoardVisualization: React.FC = () => {
     
     const perimeterEdges = new Set(getPerimeterEdges(board));
     
+    // Draw roads first
+    board.roads.forEach((player, edgeId) => {
+      const edge = board.globalEdges.get(edgeId);
+      if (!edge) return;
+      
+      const v1 = board.globalVertices.get(edge.vertices[0]);
+      const v2 = board.globalVertices.get(edge.vertices[1]);
+      if (!v1 || !v2) return;
+      
+      ctx.save();
+      
+      // Draw road shadow
+      ctx.beginPath();
+      ctx.moveTo(v1.position.x, v1.position.y);
+      ctx.lineTo(v2.position.x, v2.position.y);
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+      ctx.shadowBlur = 3;
+      ctx.shadowOffsetY = 2;
+      ctx.stroke();
+      
+      // Draw road
+      ctx.beginPath();
+      ctx.moveTo(v1.position.x, v1.position.y);
+      ctx.lineTo(v2.position.x, v2.position.y);
+      ctx.strokeStyle = PLAYER_COLORS[player - 1];
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.shadowBlur = 0;
+      ctx.stroke();
+      
+      // Add highlight
+      const dx = v2.position.x - v1.position.x;
+      const dy = v2.position.y - v1.position.y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      const nx = -dy / len * 2;
+      const ny = dx / len * 2;
+      
+      ctx.beginPath();
+      ctx.moveTo(v1.position.x + nx, v1.position.y + ny);
+      ctx.lineTo(v2.position.x + nx, v2.position.y + ny);
+      ctx.strokeStyle = adjustBrightness(PLAYER_COLORS[player - 1], 40);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      
+      ctx.restore();
+    });
+    
+    // Draw edges
     board.globalEdges.forEach((edge, id) => {
+      // Skip if this edge is a road
+      if (board.roads.has(id)) return;
+      
       const v1 = board.globalVertices.get(edge.vertices[0]);
       const v2 = board.globalVertices.get(edge.vertices[1]);
       
       if (!v1 || !v2) return;
       
+      ctx.save();
       ctx.beginPath();
       ctx.moveTo(v1.position.x, v1.position.y);
       ctx.lineTo(v2.position.x, v2.position.y);
+      ctx.lineCap = 'round';
       
-      if (viewOptions.showPortable && perimeterEdges.has(id)) {
-        ctx.strokeStyle = '#999'; // Dimmer color for perimeter edges
+      if (selectedEdge === id) {
+        // Selected edge with glow
+        ctx.shadowColor = '#00BFFF';
+        ctx.shadowBlur = 8;
+        ctx.strokeStyle = '#00BFFF';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        
+        // Core line
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#66D9FF';
         ctx.lineWidth = 2;
+        ctx.stroke();
+      } else if (viewOptions.showPortable && perimeterEdges.has(id)) {
+        ctx.strokeStyle = 'rgba(150, 150, 150, 0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       } else {
-        ctx.strokeStyle = '#666';
+        ctx.strokeStyle = 'rgba(100, 100, 100, 0.3)';
         ctx.lineWidth = 1;
+        ctx.stroke();
       }
-      
-      ctx.stroke();
+      ctx.restore();
     });
   };
 
@@ -487,23 +721,57 @@ export const BoardVisualization: React.FC = () => {
       const { x, y } = vertex.position;
       const playerColor = PLAYER_COLORS[building.player - 1];
       
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      
       if (building.type === BuildingType.Settlement) {
-        // Draw settlement (house shape)
+        // Draw settlement with gradient
+        const size = 12;
+        const gradient = ctx.createLinearGradient(
+          x, y - size,
+          x, y + 8
+        );
+        gradient.addColorStop(0, adjustBrightness(playerColor, 30));
+        gradient.addColorStop(0.5, playerColor);
+        gradient.addColorStop(1, adjustBrightness(playerColor, -30));
+        
         ctx.beginPath();
-        ctx.moveTo(x, y - 12);
+        ctx.moveTo(x, y - size);
         ctx.lineTo(x + 10, y - 4);
         ctx.lineTo(x + 10, y + 8);
         ctx.lineTo(x - 10, y + 8);
         ctx.lineTo(x - 10, y - 4);
         ctx.closePath();
         
-        ctx.fillStyle = playerColor;
+        ctx.fillStyle = gradient;
         ctx.fill();
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        
+        // Add roof highlight
+        ctx.beginPath();
+        ctx.moveTo(x - 8, y - 3);
+        ctx.lineTo(x, y - 10);
+        ctx.lineTo(x + 8, y - 3);
+        ctx.strokeStyle = adjustBrightness(playerColor, 50);
+        ctx.lineWidth = 1;
         ctx.stroke();
       } else if (building.type === BuildingType.City) {
-        // Draw city (larger with walls)
+        // Draw city with gradient
+        const size = 16;
+        const gradient = ctx.createLinearGradient(
+          x, y - size,
+          x, y + 10
+        );
+        gradient.addColorStop(0, adjustBrightness(playerColor, 30));
+        gradient.addColorStop(0.5, playerColor);
+        gradient.addColorStop(1, adjustBrightness(playerColor, -30));
+        
         ctx.beginPath();
         ctx.moveTo(x - 12, y + 10);
         ctx.lineTo(x - 12, y - 2);
@@ -521,145 +789,60 @@ export const BoardVisualization: React.FC = () => {
         ctx.lineTo(x + 12, y + 10);
         ctx.closePath();
         
-        ctx.fillStyle = playerColor;
+        ctx.fillStyle = gradient;
         ctx.fill();
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        
+        // Add tower highlights
+        ctx.strokeStyle = adjustBrightness(playerColor, 50);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x - 6, y - 8);
+        ctx.lineTo(x - 6, y - 4);
+        ctx.moveTo(x + 6, y - 8);
+        ctx.lineTo(x + 6, y - 4);
         ctx.stroke();
       }
+      ctx.restore();
     });
   };
 
-  const drawInfoPanel = (ctx: CanvasRenderingContext2D) => {
-    if (!board) return;
-    
-    // Draw stats panel
-    const panelX = 20;
-    const panelY = 20;
-    
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.fillRect(panelX, panelY, 200, 110);
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(panelX, panelY, 200, 110);
-    
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 14px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText('Board Statistics', panelX + 10, panelY + 20);
-    
-    ctx.font = '12px Arial';
-    ctx.fillText(`Hexes: ${board.hexes.length}`, panelX + 10, panelY + 40);
-    ctx.fillText(`Vertices: ${board.globalVertices.size}`, panelX + 10, panelY + 55);
-    ctx.fillText(`Portable: ${getPortableVertices(board).length}`, panelX + 10, panelY + 70);
-    ctx.fillText(`Edges: ${board.globalEdges.size}`, panelX + 10, panelY + 85);
-    
-    // Draw selected hex info
-    if (selectedHex !== null) {
-      const hex = board.hexes[selectedHex];
-      const infoX = 950;
-      const infoY = 50;
-      
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-      ctx.fillRect(infoX, infoY, 230, 200);
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(infoX, infoY, 230, 200);
-      
-      ctx.fillStyle = '#000';
-      ctx.font = 'bold 16px Arial';
-      ctx.fillText(`Hex ${hex.index}`, infoX + 10, infoY + 25);
-      
-      ctx.font = '12px Arial';
-      let y = infoY + 50;
-      ctx.fillText(`Resource: ${hex.resource || 'Desert'}`, infoX + 10, y);
-      y += 20;
-      ctx.fillText(`Number: ${hex.numberToken || 'None'}`, infoX + 10, y);
-      y += 20;
-      ctx.fillText(`Neighbors: ${hex.neighbors.join(', ')}`, infoX + 10, y);
-      y += 20;
-      
-      // Draw edges info with perimeter status
-      ctx.font = 'bold 12px Arial';
-      ctx.fillText('Edges:', infoX + 10, y);
-      y += 15;
-      
-      // Check which edges are perimeter
-      const perimeterEdges = new Set(getPerimeterEdges(board));
-      ctx.font = '10px Arial';
-      
-      HEX_EDGES.forEach((edge, i) => {
-        // Find the global edge for this hex edge
-        let isPerimeter = false;
-        let edgeId = '';
-        
-        // Find global vertices for this edge
-        let v1Id = '', v2Id = '';
-        for (const [id, gv] of board.globalVertices) {
-          if (gv.hexes.some(h => h.hexIndex === hex.index && h.vertexIndex === edge[0])) {
-            v1Id = id;
-          }
-          if (gv.hexes.some(h => h.hexIndex === hex.index && h.vertexIndex === edge[1])) {
-            v2Id = id;
-          }
-        }
-        
-        if (v1Id && v2Id) {
-          edgeId = [v1Id, v2Id].sort().join('-');
-          isPerimeter = perimeterEdges.has(edgeId);
-        }
-        
-        const edgeText = `[${edge[0]},${edge[1]}]`;
-        const xPos = infoX + 10 + (i % 2) * 110;
-        const yPos = y + Math.floor(i / 2) * 15;
-        
-        ctx.fillStyle = isPerimeter ? '#FF6B6B' : '#000';
-        ctx.fillText(edgeText, xPos, yPos);
-        
-        if (isPerimeter) {
-          ctx.fillText('(P)', xPos + 40, yPos);
-        }
-      });
-    }
-    
-    // Draw selected vertex info
-    if (selectedVertex && board) {
-      const vertex = board.globalVertices.get(selectedVertex);
-      if (vertex) {
-        const infoX = 950;
-        const infoY = 300;
-        
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.fillRect(infoX, infoY, 230, 120);
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(infoX, infoY, 230, 120);
-        
-        ctx.fillStyle = '#000';
-        ctx.font = 'bold 14px Arial';
-        ctx.fillText(`Vertex ${selectedVertex}`, infoX + 10, infoY + 25);
-        
-        ctx.font = '11px Arial';
-        let y = infoY + 45;
-        ctx.fillText(`Position: (${vertex.position.x.toFixed(0)}, ${vertex.position.y.toFixed(0)})`, infoX + 10, y);
-        y += 18;
-        ctx.fillText('Shared by hexes:', infoX + 10, y);
-        y += 15;
-        
-        vertex.hexes.forEach(h => {
-          ctx.fillText(`  Hex ${h.hexIndex}, vertex ${h.vertexIndex}`, infoX + 10, y);
-          y += 15;
-        });
-      }
-    }
-  };
 
+  // Mouse event handlers for pan
+  const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    setIsDragging(true);
+    setDragStart({ x: event.clientX, y: event.clientY });
+    setLastPan({ ...pan });
+  };
+  
+  const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDragging) return;
+    
+    const dx = event.clientX - dragStart.x;
+    const dy = event.clientY - dragStart.y;
+    setPan({
+      x: lastPan.x + dx,
+      y: lastPan.y + dy
+    });
+  };
+  
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+  
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!board || !canvasRef.current) return;
+    if (!board || !canvasRef.current || isDragging) return;
     
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const canvasX = event.clientX - rect.left;
+    const canvasY = event.clientY - rect.top;
+    
+    // Convert canvas coordinates to world coordinates
+    const x = canvasX - pan.x;
+    const y = canvasY - pan.y;
     
     // Check for vertex click first (smaller target)
     for (const [id, vertex] of board.globalVertices) {
@@ -670,6 +853,50 @@ export const BoardVisualization: React.FC = () => {
       if (distance < 10) {
         setSelectedVertex(id);
         setSelectedHex(null);
+        setSelectedEdge(null);
+        return;
+      }
+    }
+    
+    // Check for edge click (calculate distance from point to line segment)
+    for (const [id, edge] of board.globalEdges) {
+      const v1 = board.globalVertices.get(edge.vertices[0]);
+      const v2 = board.globalVertices.get(edge.vertices[1]);
+      if (!v1 || !v2) continue;
+      
+      // Calculate distance from point to line segment
+      const A = x - v1.position.x;
+      const B = y - v1.position.y;
+      const C = v2.position.x - v1.position.x;
+      const D = v2.position.y - v1.position.y;
+      
+      const dot = A * C + B * D;
+      const lenSq = C * C + D * D;
+      let param = -1;
+      
+      if (lenSq !== 0) param = dot / lenSq;
+      
+      let xx, yy;
+      
+      if (param < 0) {
+        xx = v1.position.x;
+        yy = v1.position.y;
+      } else if (param > 1) {
+        xx = v2.position.x;
+        yy = v2.position.y;
+      } else {
+        xx = v1.position.x + param * C;
+        yy = v1.position.y + param * D;
+      }
+      
+      const dx = x - xx;
+      const dy = y - yy;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance < 8) {
+        setSelectedEdge(id);
+        setSelectedHex(null);
+        setSelectedVertex(null);
         return;
       }
     }
@@ -683,12 +910,14 @@ export const BoardVisualization: React.FC = () => {
       if (distance < 50) {
         setSelectedHex(hex.index);
         setSelectedVertex(null);
+        setSelectedEdge(null);
         return;
       }
     }
     
     setSelectedHex(null);
     setSelectedVertex(null);
+    setSelectedEdge(null);
   };
 
   return (
@@ -710,6 +939,78 @@ export const BoardVisualization: React.FC = () => {
             <p>Turn: {gameState.turn}</p>
             <p>Phase: {gameState.phase}</p>
           </div>
+        </div>
+        
+        {/* Selection Info */}
+        <div style={{ 
+          padding: '20px', 
+          borderBottom: '1px solid #ddd',
+          backgroundColor: '#f8f8f8',
+          maxHeight: '300px',
+          overflowY: 'auto'
+        }}>
+          <h4 style={{ margin: '0 0 10px 0' }}>Selection Info</h4>
+          
+          {(selectedHex === null && selectedVertex === null && selectedEdge === null) && (
+            <p style={{ color: '#666', fontSize: '12px', margin: 0 }}>Click on hexes, vertices, or edges to view details</p>
+          )}
+          
+          {selectedHex !== null && board && (
+            <div style={{ fontSize: '12px' }}>
+              <h5 style={{ margin: '0 0 10px 0' }}>Hex {selectedHex}</h5>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                <div><strong>Resource:</strong> {board.hexes[selectedHex].resource || 'Desert'}</div>
+                <div><strong>Number:</strong> {board.hexes[selectedHex].numberToken || 'None'}</div>
+              </div>
+              <div><strong>Neighbors:</strong> {board.hexes[selectedHex].neighbors.join(', ')}</div>
+            </div>
+          )}
+          
+          {selectedVertex !== null && board && (
+            <div style={{ fontSize: '12px' }}>
+              <h5 style={{ margin: '0 0 10px 0' }}>Vertex {selectedVertex}</h5>
+              {(() => {
+                const vertex = board.globalVertices.get(selectedVertex);
+                if (!vertex) return null;
+                const isPortable = getPortableVertices(board).includes(selectedVertex);
+                
+                return (
+                  <>
+                    <div style={{ marginBottom: '5px' }}>
+                      <strong>Position:</strong> ({vertex.position.x.toFixed(0)}, {vertex.position.y.toFixed(0)})
+                      {isPortable && <span style={{ marginLeft: '10px', color: '#00FF00', fontWeight: 'bold' }}>PORTABLE</span>}
+                    </div>
+                    <div>
+                      <strong>Shared by hexes:</strong> {vertex.hexes.map(h => `Hex ${h.hexIndex}`).join(', ')}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+          
+          {selectedEdge !== null && board && (
+            <div style={{ fontSize: '12px' }}>
+              <h5 style={{ margin: '0 0 10px 0' }}>Edge {selectedEdge}</h5>
+              {(() => {
+                const edge = board.globalEdges.get(selectedEdge);
+                if (!edge) return null;
+                const isPerimeter = getPerimeterEdges(board).includes(selectedEdge);
+                
+                return (
+                  <>
+                    <div style={{ marginBottom: '5px' }}>
+                      <strong>Connects:</strong> {edge.vertices.join(' ↔ ')}
+                      {isPerimeter && <span style={{ marginLeft: '10px', color: '#FF6B6B', fontWeight: 'bold' }}>PERIMETER</span>}
+                    </div>
+                    <div>
+                      <strong>Shared by:</strong> {edge.hexes.map(h => `Hex ${h.hexIndex}`).join(', ')}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
         </div>
         
         {/* Game Log */}
@@ -778,10 +1079,18 @@ export const BoardVisualization: React.FC = () => {
             <label style={{ marginRight: '20px' }}>
               <input
                 type="checkbox"
-                checked={viewOptions.showVertexNumbers}
-                onChange={(e) => setViewOptions({...viewOptions, showVertexNumbers: e.target.checked})}
+                checked={viewOptions.showVertices}
+                onChange={(e) => setViewOptions({...viewOptions, showVertices: e.target.checked})}
               />
-              Show Vertex Numbers
+              Show Vertices
+            </label>
+            <label style={{ marginRight: '20px' }}>
+              <input
+                type="checkbox"
+                checked={viewOptions.showHexNumbers}
+                onChange={(e) => setViewOptions({...viewOptions, showHexNumbers: e.target.checked})}
+              />
+              Show Hex Numbers
             </label>
             <label style={{ marginRight: '20px' }}>
               <input
@@ -805,33 +1114,65 @@ export const BoardVisualization: React.FC = () => {
               </select>
             </label>
             <button onClick={() => {
-              const hexRadius = getHexRadius(viewOptions.boardSize);
-              const canvasSize = getCanvasSize(viewOptions.boardSize);
-              const center = { x: canvasSize / 2, y: canvasSize / 2 };
+              const hexRadius = getHexRadius();
+              const center = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 };
               const newBoard = initializeBoard(viewOptions.boardSize, hexRadius, center);
               setBoard(newBoard);
+              setPan({ x: 0, y: 0 });
               addLogEntry('New board generated', 'system');
             }} style={{ marginLeft: '20px' }}>
               New Board
             </button>
+            <button onClick={() => setPan({ x: 0, y: 0 })} style={{ marginLeft: '10px' }}>
+              Center View
+            </button>
+            <span style={{ marginLeft: '20px', fontSize: '12px', color: '#666' }}>
+              Drag to pan around the board
+            </span>
           </div>
-          <p style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
-            {selectedVertex ? `Selected vertex: ${selectedVertex}` : 'Click on hexes or vertices to inspect'}
-          </p>
+          {/* Board Statistics */}
+          {board && (
+            <div style={{ 
+              marginTop: '15px', 
+              padding: '15px', 
+              backgroundColor: '#f5f5f5', 
+              borderRadius: '4px',
+              display: 'inline-block'
+            }}>
+              <h4 style={{ margin: '0 0 10px 0', fontSize: '14px' }}>Board Statistics</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', fontSize: '12px' }}>
+                <div>
+                  <strong>Hexes:</strong> {board.hexes.length}
+                </div>
+                <div>
+                  <strong>Vertices:</strong> {board.globalVertices.size}
+                </div>
+                <div>
+                  <strong>Portable:</strong> {getPortableVertices(board).length}
+                </div>
+                <div>
+                  <strong>Edges:</strong> {board.globalEdges.size}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
-        <div style={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <canvas
             ref={canvasRef}
-            width={getCanvasSize(viewOptions.boardSize)}
-            height={getCanvasSize(viewOptions.boardSize)}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
             onClick={handleCanvasClick}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
             style={{
-              border: '2px solid #333',
               backgroundColor: '#fff',
-              cursor: 'pointer',
-              maxWidth: '100%',
-              maxHeight: 'calc(100vh - 200px)'
+              cursor: isDragging ? 'grabbing' : 'grab',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+              borderRadius: '4px'
             }}
           />
         </div>
@@ -839,3 +1180,4 @@ export const BoardVisualization: React.FC = () => {
     </div>
   );
 };
+
