@@ -135,14 +135,16 @@ export const BoardVisualization: React.FC = () => {
         }
         break;
       }
-      case 'help':
+      case 'help': {
         addLogEntry('Available commands: build settlement/city, roll, trade, end', 'system');
         break;
-      case 'roll':
+      }
+      case 'roll': {
         const roll = Math.floor(Math.random() * 6) + 1 + Math.floor(Math.random() * 6) + 1;
         addLogEntry(`Rolled: ${roll}`, 'action');
         break;
-      case 'end':
+      }
+      case 'end': {
         addLogEntry(`Player ${gameState.currentPlayer} ended turn`, 'action');
         setGameState(prev => ({
           ...prev,
