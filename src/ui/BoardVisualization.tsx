@@ -66,6 +66,8 @@ interface GameState {
   currentPlayer: number;
   turn: number;
   phase: 'setup' | 'play' | 'end';
+  playerResources: Record<number, Record<Resource, number>>;
+  playerSOL: Record<number, number>;
 }
 
 export const BoardVisualization: React.FC = () => {
@@ -85,7 +87,14 @@ export const BoardVisualization: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
     currentPlayer: 1,
     turn: 1,
-    phase: 'setup'
+    phase: 'setup',
+    playerResources: {
+      1: { [Resource.Wood]: 0, [Resource.Brick]: 0, [Resource.Sheep]: 0, [Resource.Wheat]: 0, [Resource.Ore]: 0 },
+      2: { [Resource.Wood]: 0, [Resource.Brick]: 0, [Resource.Sheep]: 0, [Resource.Wheat]: 0, [Resource.Ore]: 0 },
+      3: { [Resource.Wood]: 0, [Resource.Brick]: 0, [Resource.Sheep]: 0, [Resource.Wheat]: 0, [Resource.Ore]: 0 },
+      4: { [Resource.Wood]: 0, [Resource.Brick]: 0, [Resource.Sheep]: 0, [Resource.Wheat]: 0, [Resource.Ore]: 0 }
+    },
+    playerSOL: { 1: 1000, 2: 1000, 3: 1000, 4: 1000 }
   });
   const logIdRef = useRef(0);
   
