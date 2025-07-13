@@ -151,8 +151,9 @@ export const BoardVisualization: React.FC = () => {
         }));
         break;
       }
-      default:
+      default: {
         addLogEntry(`Unknown command: ${cmd}`, 'system');
+      }
     }
     
     setCommandInput('');
