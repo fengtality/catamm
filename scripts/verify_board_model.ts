@@ -1,4 +1,4 @@
-import { initializeBoard, getPerimeterEdges, getPerimeterVertices } from '../src/models/board.initialization';
+import { initializeBoard, getPerimeterEdges, getPerimeterVertices, getPortableVertices } from '../src/models/board.initialization';
 import { HEX_EDGES } from '../src/models/board.models';
 
 const board = initializeBoard();
@@ -12,6 +12,7 @@ console.log(`- Global vertices: ${board.globalVertices.size}`);
 console.log(`- Global edges: ${board.globalEdges.size}`);
 console.log(`- Perimeter edges: ${getPerimeterEdges(board).length}`);
 console.log(`- Perimeter vertices: ${getPerimeterVertices(board).length}`);
+console.log(`- Portable vertices: ${getPortableVertices(board).length}`);
 console.log(`- Ports: ${board.ports.length}`);
 
 // Verify hex numbering pattern

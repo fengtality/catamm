@@ -300,6 +300,23 @@ export function getPerimeterVertices(board: Board): string[] {
   return perimeterVertexIds;
 }
 
+// Get portable vertices (vertices between exactly 2 hexes and on the perimeter)
+export function getPortableVertices(board: Board): string[] {
+  const portableVertexIds: string[] = [];
+  const perimeterVertices = new Set(getPerimeterVertices(board));
+  
+  board.globalVertices.forEach((vertex, id) => {
+    // A vertex is portable if it's:
+    // 1. On the perimeter
+    // 2. Shared by exactly 2 hexes
+    if (perimeterVertices.has(id) && vertex.hexes.length === 2) {
+      portableVertexIds.push(id);
+    }
+  });
+  
+  return portableVertexIds;
+}
+
 // Find valid positions for new hexes adjacent to a perimeter vertex
 export function findValidHexPositions(board: Board, vertexId: string): Array<{q: number, r: number}> {
   const vertex = board.globalVertices.get(vertexId);

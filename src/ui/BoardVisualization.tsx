@@ -4,6 +4,7 @@ import {
   initializeBoard, 
   getPerimeterEdges, 
   getPerimeterVertices,
+  getPortableVertices,
   findValidHexPositions,
   addHexToBoard
 } from '@/models/board.initialization';
@@ -258,6 +259,7 @@ export const BoardVisualization: React.FC = () => {
     console.log('Global edges:', newBoard.globalEdges.size);
     console.log('Perimeter edges:', getPerimeterEdges(newBoard).length);
     console.log('Perimeter vertices:', getPerimeterVertices(newBoard).length);
+    console.log('Portable vertices:', getPortableVertices(newBoard).length);
   }, [viewOptions.boardSize]);
 
   useEffect(() => {
@@ -524,10 +526,10 @@ export const BoardVisualization: React.FC = () => {
     const panelY = 20;
     
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.fillRect(panelX, panelY, 200, 100);
+    ctx.fillRect(panelX, panelY, 200, 110);
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
-    ctx.strokeRect(panelX, panelY, 200, 100);
+    ctx.strokeRect(panelX, panelY, 200, 110);
     
     ctx.fillStyle = '#000';
     ctx.font = 'bold 14px Arial';
@@ -536,8 +538,9 @@ export const BoardVisualization: React.FC = () => {
     
     ctx.font = '12px Arial';
     ctx.fillText(`Hexes: ${board.hexes.length}`, panelX + 10, panelY + 40);
-    ctx.fillText(`Global Vertices: ${board.globalVertices.size}`, panelX + 10, panelY + 55);
-    ctx.fillText(`Global Edges: ${board.globalEdges.size}`, panelX + 10, panelY + 70);
+    ctx.fillText(`Vertices: ${board.globalVertices.size}`, panelX + 10, panelY + 55);
+    ctx.fillText(`Portable: ${getPortableVertices(board).length}`, panelX + 10, panelY + 70);
+    ctx.fillText(`Edges: ${board.globalEdges.size}`, panelX + 10, panelY + 85);
     
     // Draw selected hex info
     if (selectedHex !== null) {
