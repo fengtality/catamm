@@ -88,6 +88,14 @@ export default function Header({ viewOptions, onViewOptionsChange, onNewBoard, o
             >
               Show Portable Vertices
             </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={viewOptions.showSelectionInfo}
+              onCheckedChange={(checked) =>
+                onViewOptionsChange({ ...viewOptions, showSelectionInfo: checked })
+              }
+            >
+              Show Selection Info
+            </DropdownMenuCheckboxItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Board Size</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => {

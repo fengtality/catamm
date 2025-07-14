@@ -9,6 +9,7 @@ export interface ViewOptions {
   showVertices: boolean
   showHexNumbers: boolean
   showPortable: boolean
+  showSelectionInfo: boolean
   boardSize: number
 }
 

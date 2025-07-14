@@ -41,10 +41,10 @@ export default function GameLog({ entries, onCommand, currentPlayer }: GameLogPr
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full w-full flex flex-col min-w-0">
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto font-mono text-xs space-y-1 p-4"
+        className="flex-1 overflow-y-auto font-mono text-xs space-y-1 p-4 min-w-0"
       >
         {entries.length === 0 ? (
           <div className="text-muted-foreground">
@@ -54,7 +54,7 @@ export default function GameLog({ entries, onCommand, currentPlayer }: GameLogPr
           entries.map((entry) => (
             <div
               key={entry.id}
-              className={`${getEntryColor(entry.type)} break-words`}
+              className={`${getEntryColor(entry.type)} break-words whitespace-pre-wrap`}
             >
               <span className="text-muted-foreground">
                 [{entry.timestamp.toLocaleTimeString()}]

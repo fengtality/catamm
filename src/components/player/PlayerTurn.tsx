@@ -55,29 +55,19 @@ export default function PlayerTurn({
   
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-mono font-semibold">
-            {currentPlayer ? (
-              <span style={{ color: playerColor }}>Player {currentPlayer}&apos;s Turn</span>
-            ) : (
-              'Player Turn'
-            )}
-          </h3>
-          <div className="flex items-center space-x-2">
-            {gamePhase === 'setup' ? (
-              <span className="text-sm font-mono text-muted-foreground">
-                Setup Round {setupRound}/2
-              </span>
-            ) : (
-              currentTurn && (
-                <span className="text-sm font-mono text-muted-foreground">Turn {currentTurn}</span>
-              )
-            )}
-          </div>
+      <div className="inline-flex items-center gap-4 bg-card border border-border rounded-lg p-3 shadow-lg">
+        {/* Player info */}
+        <div className="flex items-center gap-3 pr-3 border-r border-border">
+          <span className="text-sm font-mono font-semibold" style={{ color: playerColor }}>
+            Player {currentPlayer}
+          </span>
+          <span className="text-xs font-mono text-muted-foreground">
+            {gamePhase === 'setup' ? `Setup ${setupRound}/2` : `Turn ${currentTurn}`}
+          </span>
         </div>
         
-        <div className="flex items-center space-x-2">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
           {/* Settlement */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -86,7 +76,7 @@ export default function PlayerTurn({
                   variant="ghost"
                   size="icon"
                   onClick={() => onQuickAction('build-settlement')}
-                  className="h-8 w-8"
+                  className="h-9 w-9"
                   disabled={(isMainPhase && (!hasResourcesFor || !hasResourcesFor('Settlement'))) || (isSetupPhase && !needsSettlement)}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -115,7 +105,7 @@ export default function PlayerTurn({
                   variant="ghost"
                   size="icon"
                   onClick={() => onQuickAction('build-road')}
-                  className="h-8 w-8"
+                  className="h-9 w-9"
                   disabled={(isMainPhase && (!hasResourcesFor || !hasResourcesFor('Road'))) || (isSetupPhase && !needsRoad)}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -144,7 +134,7 @@ export default function PlayerTurn({
                   variant="ghost"
                   size="icon"
                   onClick={() => onQuickAction('build-city')}
-                  className="h-8 w-8"
+                  className="h-9 w-9"
                   disabled={(isMainPhase && (!hasResourcesFor || !hasResourcesFor('City'))) || isSetupPhase}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -173,7 +163,7 @@ export default function PlayerTurn({
                   variant="ghost"
                   size="icon"
                   onClick={() => onQuickAction('buy-dev-card')}
-                  className="h-8 w-8"
+                  className="h-9 w-9"
                   disabled={(isMainPhase && (!hasResourcesFor || !hasResourcesFor('DevCard'))) || isSetupPhase}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -203,7 +193,7 @@ export default function PlayerTurn({
                   variant="ghost"
                   size="icon"
                   onClick={() => onQuickAction('use-dev-card')}
-                  className="h-8 w-8"
+                  className="h-9 w-9"
                   disabled={playableDevCards === 0}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -232,7 +222,7 @@ export default function PlayerTurn({
                 variant="ghost"
                 size="icon"
                 onClick={() => onQuickAction('end-turn')}
-                className="h-8 w-8"
+                className="h-9 w-9"
                 disabled={gamePhase === 'setup'}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,59 +239,13 @@ export default function PlayerTurn({
           </Tooltip>
         </div>
         
-        {/* Player Resources */}
-        <div className="mt-3 pt-3 border-t border-border">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs font-mono">
-            {/* Column 1 */}
-            <div className="flex items-center justify-between">
-              <span className="flex items-center space-x-1">
-                <span style={{ color: 'var(--resource-wood)' }}>🪵</span>
-                <span className="text-muted-foreground">Wood</span>
-              </span>
-              <span className="font-semibold">{playerResources?.[Resource.Wood] || 0}</span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="flex items-center space-x-1">
-                <span style={{ color: 'var(--resource-brick)' }}>🧱</span>
-                <span className="text-muted-foreground">Brick</span>
-              </span>
-              <span className="font-semibold">{playerResources?.[Resource.Brick] || 0}</span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="flex items-center space-x-1">
-                <span style={{ color: 'var(--resource-sheep)' }}>🐑</span>
-                <span className="text-muted-foreground">Sheep</span>
-              </span>
-              <span className="font-semibold">{playerResources?.[Resource.Sheep] || 0}</span>
-            </div>
-            
-            {/* Column 2 */}
-            <div className="flex items-center justify-between">
-              <span className="flex items-center space-x-1">
-                <span style={{ color: 'var(--resource-wheat)' }}>🌾</span>
-                <span className="text-muted-foreground">Wheat</span>
-              </span>
-              <span className="font-semibold">{playerResources?.[Resource.Wheat] || 0}</span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="flex items-center space-x-1">
-                <span style={{ color: 'var(--resource-ore)' }}>⛰️</span>
-                <span className="text-muted-foreground">Ore</span>
-              </span>
-              <span className="font-semibold">{playerResources?.[Resource.Ore] || 0}</span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="flex items-center space-x-1">
-                <span>🎴</span>
-                <span className="text-muted-foreground">Dev Cards</span>
-              </span>
-              <span className="font-semibold">{playerDevCards || 0}</span>
-            </div>
-          </div>
+        {/* Status text */}
+        <div className="flex items-center pl-3 border-l border-border">
+          <span className="text-xs font-mono text-muted-foreground">
+            {isSetupPhase && needsSettlement && "Place settlement"}
+            {isSetupPhase && needsRoad && "Place road"}
+            {isMainPhase && "Choose action"}
+          </span>
         </div>
       </div>
     </TooltipProvider>

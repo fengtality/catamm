@@ -4,6 +4,7 @@ import LeftSidebar from './components/layout/LeftSidebar'
 import RightSidebar from './components/layout/RightSidebar'
 import BoardSVG from './components/board/BoardSVG'
 import SelectionInfo from './components/game/SelectionInfo'
+import PlayerTurn from './components/player/PlayerTurn'
 import { Board, BuildingType } from '@/models/board.models'
 import { initializeBoard } from '@/models/board.initialization'
 import { Resource, BUILDING_COSTS } from '@/types'
@@ -88,6 +89,7 @@ function App() {
     showVertices: true,
     showHexNumbers: false,
     showPortable: true,
+    showSelectionInfo: false,
     boardSize: 2
   })
   const [gameLog, setGameLog] = useState<GameLogEntry[]>([])
@@ -106,14 +108,33 @@ function App() {
     const size = boardSize ?? viewOptions.boardSize
     const newBoard = initializeBoard(size)
     setBoard(newBoard)
+    
+    // Reset game state to setup phase
+    setGameState({
+      currentPlayer: 1,
+      turn: 1,
+      phase: 'setup',
+      playerResources: initializePlayerData().playerResources,
+      playerSOL: initializePlayerData().playerSOL,
+      playerDevCards: initializePlayerData().playerDevCards,
+      knightsPlayed: initializePlayerData().knightsPlayed
+    })
+    setSetupRound(1)
+    setSetupBuildings(0)
+    setActiveMarkets(new Map())
+    
     addLogEntry(`New board generated with ${newBoard.hexes.length} hexes`, 'system')
     addLogEntry(`Setup Phase: ${NUM_PLAYERS} players, each places 2 settlements and 2 roads`, 'system')
     addLogEntry(`Player 1's turn - Setup Round 1`, 'system')
   }, [viewOptions.boardSize, addLogEntry])
 
   // Initialize board on mount
+  const boardInitialized = useRef(false)
   React.useEffect(() => {
-    handleNewBoard()
+    if (!boardInitialized.current) {
+      boardInitialized.current = true
+      handleNewBoard()
+    }
   }, [handleNewBoard])
 
   // Distribute resources based on dice roll
@@ -844,38 +865,67 @@ function App() {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-x-auto overflow-y-hidden relative">
-        {/* Left Sidebar */}
-        {leftSidebarVisible && (
+      <div className="flex-1 flex overflow-x-auto overflow-y-hidden">
+        {/* Left Sidebar with smooth slide transition */}
+        <div 
+          className="relative transition-all duration-300 ease-out"
+          style={{ 
+            width: leftSidebarVisible ? '24rem' : '0',
+            minWidth: leftSidebarVisible ? '24rem' : '0'
+          }}
+        >
           <LeftSidebar
             gameLog={gameLog}
             onCommand={handleCommand}
             currentPlayer={gameState.currentPlayer}
           />
-        )}
-        {/* Toggle Button */}
-        <button
-          onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
-          className="absolute top-4 z-10 bg-sidebar border border-sidebar-border rounded-r-md p-2 hover:bg-sidebar-accent transition-colors"
-          style={{ left: leftSidebarVisible ? '384px' : '0' }}
-        >
-          <svg 
-            className="w-4 h-4" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
+          {/* Minimalist toggle tab */}
+          <button
+            onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
+            className="absolute -right-6 top-1/2 -translate-y-1/2 w-6 h-16 flex items-center justify-center bg-muted hover:bg-accent text-muted-foreground hover:text-accent-foreground border-t border-b border-r border-border rounded-r transition-all duration-200"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d={leftSidebarVisible ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"}
-            />
-          </svg>
-        </button>
+            <svg 
+              className="w-3 h-3 transition-transform duration-300" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+              style={{ transform: leftSidebarVisible ? 'rotate(0deg)' : 'rotate(180deg)' }}
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+        </div>
 
         {/* Main Board Area */}
         <div className="flex-1 flex flex-col bg-muted min-w-[800px]">
+          {/* Player Turn - Floating toolbar */}
+          <div className="flex justify-center px-4 py-8">
+            <PlayerTurn
+              onQuickAction={handleQuickAction}
+              currentPlayer={gameState.currentPlayer}
+              currentTurn={gameState.turn}
+              playerResources={gameState.playerResources[gameState.currentPlayer] || createEmptyResourceSet()}
+              playerDevCards={gameState.playerDevCards[gameState.currentPlayer]?.length || 0}
+              playerDevCardsArray={gameState.playerDevCards[gameState.currentPlayer] || []}
+              gamePhase={gameState.phase}
+              setupRound={setupRound}
+              setupBuildings={setupBuildings}
+              hasResourcesFor={(purchaseType: 'Settlement' | 'City' | 'Road' | 'DevCard') => {
+                const resources = gameState.playerResources[gameState.currentPlayer] || createEmptyResourceSet()
+                const costs = purchaseType === 'DevCard' ? DEV_CARD_COST : BUILDING_COSTS[purchaseType]
+                
+                return Object.entries(costs).every(([resource, required]) => {
+                  const available = resources[resource as Resource] || 0
+                  return available >= required
+                })
+              }}
+            />
+          </div>
           <div className="flex-1 overflow-hidden flex items-center justify-center">
             <BoardSVG
               board={board}
@@ -932,12 +982,6 @@ function App() {
               }}
             />
           </div>
-          <SelectionInfo
-            board={board}
-            selectedHex={selectedHex}
-            selectedVertex={selectedVertex}
-            selectedEdge={selectedEdge}
-          />
         </div>
 
         {/* Right Sidebar */}
@@ -960,6 +1004,9 @@ function App() {
           setupRound={setupRound}
           setupBuildings={setupBuildings}
           hasResourcesFor={(type) => hasResourcesFor(type, gameState.currentPlayer)}
+          selectedHex={selectedHex}
+          selectedEdge={selectedEdge}
+          showSelectionInfo={viewOptions.showSelectionInfo}
         />
       </div>
     </div>

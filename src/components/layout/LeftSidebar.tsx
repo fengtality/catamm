@@ -14,7 +14,7 @@ export default function LeftSidebar({
   currentPlayer
 }: LeftSidebarProps) {
   return (
-    <aside className="w-96 min-w-80 bg-sidebar border-r border-sidebar-border flex flex-col h-full">
+    <aside className="w-full h-full bg-sidebar border-r border-sidebar-border flex flex-col overflow-hidden">
       {/* Game Log with integrated chat input */}
       <GameLog entries={gameLog} onCommand={onCommand} currentPlayer={currentPlayer} />
     </aside>

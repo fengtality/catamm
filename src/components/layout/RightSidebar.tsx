@@ -1,7 +1,7 @@
 
 import { useState } from 'react'
 import Leaderboard from '../player/Leaderboard'
-import PlayerTurn from '../player/PlayerTurn'
+import SelectionInfo from '../game/SelectionInfo'
 import MarketsList from '../amm/MarketsList'
 import AMMWidget from '../amm/AMMWidget'
 import { GameState } from '../shared/types'
@@ -28,6 +28,9 @@ interface RightSidebarProps {
   setupRound?: number
   setupBuildings?: number
   hasResourcesFor?: (purchaseType: 'Settlement' | 'City' | 'Road' | 'DevCard') => boolean
+  selectedHex?: number | null
+  selectedEdge?: string | null
+  showSelectionInfo?: boolean
 }
 
 export default function RightSidebar({
@@ -47,7 +50,10 @@ export default function RightSidebar({
   playerDevCardsArray,
   setupRound,
   setupBuildings,
-  hasResourcesFor
+  hasResourcesFor,
+  selectedHex,
+  selectedEdge,
+  showSelectionInfo = false
 }: RightSidebarProps) {
   const [selectedMarket, setSelectedMarket] = useState<AMMPool | null>(null)
   
@@ -183,23 +189,18 @@ export default function RightSidebar({
         <Leaderboard 
           players={players} 
           currentPlayer={gameState.currentPlayer}
+          playerResources={playerResources}
         />
       </div>
 
-      {/* Player Turn */}
-      {onQuickAction && (
+      {/* Selection Info */}
+      {showSelectionInfo && (
         <div className="border-b border-sidebar-border">
-          <PlayerTurn
-            onQuickAction={onQuickAction}
-            currentPlayer={currentPlayer}
-            currentTurn={currentTurn}
-            playerResources={currentPlayerResources as Record<Resource, number>}
-            playerDevCards={playerDevCards}
-            playerDevCardsArray={playerDevCardsArray}
-            gamePhase={gameState.phase}
-            setupRound={setupRound}
-            setupBuildings={setupBuildings}
-            hasResourcesFor={hasResourcesFor}
+          <SelectionInfo
+            board={board}
+            selectedHex={selectedHex || null}
+            selectedVertex={selectedVertex || null}
+            selectedEdge={selectedEdge || null}
           />
         </div>
       )}
