@@ -1,9 +1,8 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { Board, Hex, GlobalVertex, GlobalEdge, HEX_EDGES, BuildingType, Building } from '@/models/board.models'
+import { Board, Hex, BuildingType } from '@/models/board.models'
 import { 
   getPerimeterEdges, 
-  getPerimeterVertices,
   getPortableVertices
 } from '@/models/board.initialization'
 import { Resource } from '@/types'
@@ -40,15 +39,6 @@ export default function BoardCanvas({
   const CANVAS_WIDTH = 3000
   const CANVAS_HEIGHT = 3000
 
-  // Helper to get CSS variable value
-  const getCSSVar = (name: string): string => {
-    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-    // Convert OKLCH to usable format
-    if (value.startsWith('oklch')) {
-      return `oklch(${value.slice(6, -1)})`
-    }
-    return value
-  }
 
   // Watch for dark mode changes
   useEffect(() => {
@@ -68,25 +58,35 @@ export default function BoardCanvas({
     return () => observer.disconnect()
   }, [])
 
-  const RESOURCE_COLORS: Record<Resource, string> = {
-    [Resource.Wood]: '#2D5016',  // Deep forest green
-    [Resource.Brick]: '#B8584D',  // Terracotta red
-    [Resource.Sheep]: '#83C55B',  // Pasture green
-    [Resource.Wheat]: '#F4C842',  // Golden wheat
-    [Resource.Ore]: '#7A7A7A'     // Mountain gray
-  }
+  // Helper to get CSS variable value
+  const getCSSVar = useCallback((name: string): string => {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  }, [])
 
-  const PLAYER_COLORS = ['#FF0000', '#0000FF', '#FFA500', '#FFFFFF']
+  const RESOURCE_COLORS = React.useMemo(() => ({
+    [Resource.Wood]: getCSSVar('--resource-wood'),
+    [Resource.Brick]: getCSSVar('--resource-brick'),
+    [Resource.Sheep]: getCSSVar('--resource-sheep'),
+    [Resource.Wheat]: getCSSVar('--resource-wheat'),
+    [Resource.Ore]: getCSSVar('--resource-ore')
+  }), [getCSSVar])
+
+  const PLAYER_COLORS = React.useMemo(() => [
+    getCSSVar('--player-1'),
+    getCSSVar('--player-2'),
+    getCSSVar('--player-3'),
+    getCSSVar('--player-4')
+  ], [getCSSVar])
 
   // Helper function to adjust color brightness
-  function adjustBrightness(color: string, amount: number): string {
+  const adjustBrightness = useCallback((color: string, amount: number): string => {
     const hex = color.replace('#', '')
     const num = parseInt(hex, 16)
     const r = Math.min(255, Math.max(0, (num >> 16) + amount))
     const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount))
     const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount))
     return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')
-  }
+  }, [])
 
   // Get number of probability dots for a number token
   function getProbabilityDots(number: number): number {
@@ -217,7 +217,7 @@ export default function BoardCanvas({
   }, [board, isDragging, pan, onHexClick, onVertexClick, onEdgeClick])
 
   // Drawing functions
-  const drawHex = (ctx: CanvasRenderingContext2D, hex: Hex, viewOptions: ViewOptions) => {
+  const drawHex = useCallback((ctx: CanvasRenderingContext2D, hex: Hex, viewOptions: ViewOptions) => {
     const { x, y } = hex.position
     
     // Draw hexagon shape
@@ -230,12 +230,12 @@ export default function BoardCanvas({
     
     // Apply shadow effect - enhanced for selected hex
     if (selectedHex === hex.index) {
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
+      ctx.shadowColor = getCSSVar('--shadow-strong')
       ctx.shadowBlur = 15
       ctx.shadowOffsetX = 0
       ctx.shadowOffsetY = 0
     } else {
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
+      ctx.shadowColor = getCSSVar('--shadow-medium')
       ctx.shadowBlur = 8
       ctx.shadowOffsetX = 3
       ctx.shadowOffsetY = 3
@@ -250,7 +250,7 @@ export default function BoardCanvas({
       ctx.fillStyle = adjustBrightness(baseColor, brightnessAdjust)
     } else {
       // Desert color
-      const desertColor = '#E5D6C3'
+      const desertColor = getCSSVar('--resource-desert')
       ctx.fillStyle = adjustBrightness(desertColor, brightnessAdjust)
     }
     ctx.fill()
@@ -264,18 +264,18 @@ export default function BoardCanvas({
     // Draw subtle border for all hexes
     ctx.lineJoin = 'round'
     ctx.lineCap = 'round'
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)'
+    ctx.strokeStyle = getCSSVar('--hex-border')
     ctx.lineWidth = 1.5
     ctx.stroke()
     
     // Draw hex index if enabled
     if (viewOptions.showHexNumbers) {
       ctx.save()
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
+      ctx.fillStyle = getCSSVar('--hex-label')
       ctx.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
+      ctx.shadowColor = getCSSVar('--shadow-medium')
       ctx.shadowBlur = 2
       ctx.shadowOffsetX = 1
       ctx.shadowOffsetY = 1
@@ -287,7 +287,7 @@ export default function BoardCanvas({
     if (hex.numberToken) {
       // Draw number token with elegant design
       ctx.save()
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
+      ctx.shadowColor = getCSSVar('--shadow-medium')
       ctx.shadowBlur = 4
       ctx.shadowOffsetX = 2
       ctx.shadowOffsetY = 2
@@ -297,13 +297,13 @@ export default function BoardCanvas({
       
       // Gradient for token
       const tokenGradient = ctx.createRadialGradient(x - 5, y + 10, 0, x, y + 15, 22)
-      tokenGradient.addColorStop(0, '#FFFEF7')
-      tokenGradient.addColorStop(0.6, '#FFF8DC')
-      tokenGradient.addColorStop(1, '#E8D4B0')
+      tokenGradient.addColorStop(0, getCSSVar('--background'))
+      tokenGradient.addColorStop(0.6, getCSSVar('--muted'))
+      tokenGradient.addColorStop(1, getCSSVar('--muted-foreground'))
       ctx.fillStyle = tokenGradient
       ctx.fill()
       
-      ctx.strokeStyle = '#8B6F47'
+      ctx.strokeStyle = getCSSVar('--muted-foreground')
       ctx.lineWidth = 2
       ctx.stroke()
       ctx.restore()
@@ -315,7 +315,7 @@ export default function BoardCanvas({
       // Calculate color based on probability
       let textColor: string
       if (isRed) {
-        textColor = '#C62828' // Red for 6 and 8
+        textColor = getCSSVar('--destructive') // Red for 6 and 8
       } else {
         // Map dots (1-4) to grayscale values
         const grayValue = Math.round(140 - (dots * 30))
@@ -327,7 +327,7 @@ export default function BoardCanvas({
       ctx.font = '700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
+      ctx.shadowColor = getCSSVar('--shadow-light')
       ctx.shadowBlur = 1
       ctx.shadowOffsetY = 1
       ctx.fillText(hex.numberToken.toString(), x, y + 15)
@@ -339,7 +339,7 @@ export default function BoardCanvas({
       ctx.save()
       
       // Robber shadow
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
+      ctx.shadowColor = getCSSVar('--shadow-strong')
       ctx.shadowBlur = 8
       ctx.shadowOffsetX = 4
       ctx.shadowOffsetY = 4
@@ -354,10 +354,10 @@ export default function BoardCanvas({
         x - robberTopWidth/2, y - robberHeight/2,
         x + robberTopWidth/2, y + robberHeight/2
       )
-      bodyGradient.addColorStop(0, '#3A3A3A')
-      bodyGradient.addColorStop(0.3, '#2C2C2C')
-      bodyGradient.addColorStop(0.7, '#1A1A1A')
-      bodyGradient.addColorStop(1, '#000000')
+      bodyGradient.addColorStop(0, getCSSVar('--muted-foreground'))
+      bodyGradient.addColorStop(0.3, getCSSVar('--foreground'))
+      bodyGradient.addColorStop(0.7, getCSSVar('--foreground'))
+      bodyGradient.addColorStop(1, getCSSVar('--foreground'))
       
       // Draw body
       ctx.beginPath()
@@ -372,7 +372,7 @@ export default function BoardCanvas({
       ctx.fill()
       
       // Body outline
-      ctx.strokeStyle = '#000'
+      ctx.strokeStyle = getCSSVar('--foreground')
       ctx.lineWidth = 1.5
       ctx.stroke()
       
@@ -388,15 +388,15 @@ export default function BoardCanvas({
         x - 3, headY - 3, 0,
         x, headY, headRadius
       )
-      headGradient.addColorStop(0, '#4A4A4A')
-      headGradient.addColorStop(0.7, '#2C2C2C')
-      headGradient.addColorStop(1, '#1A1A1A')
+      headGradient.addColorStop(0, getCSSVar('--muted-foreground'))
+      headGradient.addColorStop(0.7, getCSSVar('--foreground'))
+      headGradient.addColorStop(1, getCSSVar('--foreground'))
       
       ctx.beginPath()
       ctx.arc(x, headY, headRadius, 0, Math.PI * 2)
       ctx.fillStyle = headGradient
       ctx.fill()
-      ctx.strokeStyle = '#000'
+      ctx.strokeStyle = getCSSVar('--foreground')
       ctx.lineWidth = 1.5
       ctx.stroke()
       
@@ -405,32 +405,30 @@ export default function BoardCanvas({
       ctx.moveTo(x - robberTopWidth/3, y - robberHeight/3)
       ctx.lineTo(x - robberTopWidth/4, y - robberHeight/2.5)
       ctx.lineTo(x - robberBaseWidth/3, y + robberHeight/3)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'
+      ctx.strokeStyle = getCSSVar('--muted')
       ctx.lineWidth = 1.5
       ctx.stroke()
       
       // Add small highlight on head
       ctx.beginPath()
       ctx.arc(x - 3, headY - 3, 3, 0, Math.PI * 2)
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
+      ctx.fillStyle = getCSSVar('--muted')
       ctx.fill()
       
       ctx.restore()
     }
-  }
+  }, [selectedHex, RESOURCE_COLORS, adjustBrightness, getCSSVar])
 
-  const drawVertices = (ctx: CanvasRenderingContext2D, hex: Hex) => {
+  const drawVertices = useCallback((ctx: CanvasRenderingContext2D, hex: Hex) => {
     hex.vertices.forEach((vertex, index) => {
       const { x, y } = vertex.position
       
       // Find global vertex
-      let globalVertex: GlobalVertex | null = null
       let globalId = ''
       
       if (board) {
         for (const [id, gv] of board.globalVertices) {
           if (gv.hexes.some(h => h.hexIndex === hex.index && h.vertexIndex === index)) {
-            globalVertex = gv
             globalId = id
             break
           }
@@ -455,31 +453,31 @@ export default function BoardCanvas({
         ctx.arc(x, y, radius, 0, 2 * Math.PI)
         
         if (isSelectedPortable) {
-          ctx.fillStyle = '#00FF00' // Bright green for selected portable
+          ctx.fillStyle = getCSSVar('--selection-primary') // Bright green for selected portable
         } else if (selectedVertex === globalId) {
-          ctx.fillStyle = '#0080FF' // Bright blue for selected vertex
+          ctx.fillStyle = getCSSVar('--selection-port') // Blue for selected vertex
         } else if (isPortable) {
-          ctx.fillStyle = '#00FF00' // Green for portable vertices
+          ctx.fillStyle = getCSSVar('--selection-primary') // Green for portable vertices
         } else {
-          ctx.fillStyle = '#FFF'
+          ctx.fillStyle = getCSSVar('--background')
         }
         ctx.fill()
         
-        ctx.strokeStyle = isSelectedPortable ? '#00CC00' : '#333'
+        ctx.strokeStyle = isSelectedPortable ? getCSSVar('--selection-secondary') : getCSSVar('--foreground')
         ctx.lineWidth = isSelectedPortable ? 3 : 1
         ctx.stroke()
         
         // Draw labels
         if (isSelectedPortable) {
           // Draw "P" label for selected portable vertex
-          ctx.fillStyle = '#FFF'
+          ctx.fillStyle = getCSSVar('--background')
           ctx.font = 'bold 16px Arial'
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           ctx.fillText('P', x, y)
         } else if (isSelectedHex && viewOptions.showVertices) {
           // Draw vertex number for selected hex
-          ctx.fillStyle = '#000'
+          ctx.fillStyle = getCSSVar('--foreground')
           ctx.font = 'bold 10px Arial'
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
@@ -487,9 +485,9 @@ export default function BoardCanvas({
         }
       }
     })
-  }
+  }, [board, selectedHex, selectedVertex, viewOptions, getCSSVar])
 
-  const drawGlobalEdges = (ctx: CanvasRenderingContext2D) => {
+  const drawGlobalEdges = useCallback((ctx: CanvasRenderingContext2D) => {
     if (!board) return
     
     const perimeterEdges = new Set(getPerimeterEdges(board))
@@ -509,10 +507,10 @@ export default function BoardCanvas({
       ctx.beginPath()
       ctx.moveTo(v1.position.x, v1.position.y)
       ctx.lineTo(v2.position.x, v2.position.y)
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)'
+      ctx.strokeStyle = getCSSVar('--shadow-medium')
       ctx.lineWidth = 10
       ctx.lineCap = 'round'
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
+      ctx.shadowColor = getCSSVar('--shadow-light')
       ctx.shadowBlur = 3
       ctx.shadowOffsetY = 2
       ctx.stroke()
@@ -521,7 +519,7 @@ export default function BoardCanvas({
       ctx.beginPath()
       ctx.moveTo(v1.position.x, v1.position.y)
       ctx.lineTo(v2.position.x, v2.position.y)
-      ctx.strokeStyle = PLAYER_COLORS[player - 1]
+      ctx.strokeStyle = PLAYER_COLORS[player - 1] || getCSSVar('--foreground')
       ctx.lineWidth = 6
       ctx.lineCap = 'round'
       ctx.shadowBlur = 0
@@ -537,7 +535,7 @@ export default function BoardCanvas({
       ctx.beginPath()
       ctx.moveTo(v1.position.x + nx, v1.position.y + ny)
       ctx.lineTo(v2.position.x + nx, v2.position.y + ny)
-      ctx.strokeStyle = adjustBrightness(PLAYER_COLORS[player - 1], 40)
+      ctx.strokeStyle = adjustBrightness(PLAYER_COLORS[player - 1] || '#000000', 40)
       ctx.lineWidth = 1.5
       ctx.stroke()
       
@@ -562,31 +560,32 @@ export default function BoardCanvas({
       
       if (selectedEdge === id) {
         // Selected edge with glow
-        ctx.shadowColor = '#00BFFF'
+        const selectionColor = getCSSVar('--selection-port')
+        ctx.shadowColor = selectionColor
         ctx.shadowBlur = 8
-        ctx.strokeStyle = '#00BFFF'
+        ctx.strokeStyle = selectionColor
         ctx.lineWidth = 4
         ctx.stroke()
         
         // Core line
         ctx.shadowBlur = 0
-        ctx.strokeStyle = '#66D9FF'
+        ctx.strokeStyle = selectionColor
         ctx.lineWidth = 2
         ctx.stroke()
       } else if (viewOptions.showPortable && perimeterEdges.has(id)) {
-        ctx.strokeStyle = 'rgba(150, 150, 150, 0.5)'
+        ctx.strokeStyle = getCSSVar('--edge-perimeter')
         ctx.lineWidth = 1.5
         ctx.stroke()
       } else {
-        ctx.strokeStyle = 'rgba(100, 100, 100, 0.3)'
+        ctx.strokeStyle = getCSSVar('--edge-default')
         ctx.lineWidth = 1
         ctx.stroke()
       }
       ctx.restore()
     })
-  }
+  }, [board, selectedEdge, viewOptions, PLAYER_COLORS, adjustBrightness, getCSSVar])
 
-  const drawBuildings = (ctx: CanvasRenderingContext2D) => {
+  const drawBuildings = useCallback((ctx: CanvasRenderingContext2D) => {
     if (!board) return
     
     board.buildings.forEach((building, vertexId) => {
@@ -597,7 +596,7 @@ export default function BoardCanvas({
       const playerColor = PLAYER_COLORS[building.player - 1]
       
       ctx.save()
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)'
+      ctx.shadowColor = getCSSVar('--shadow-strong')
       ctx.shadowBlur = 4
       ctx.shadowOffsetX = 2
       ctx.shadowOffsetY = 2
@@ -609,9 +608,10 @@ export default function BoardCanvas({
           x, y - size,
           x, y + 8
         )
-        gradient.addColorStop(0, adjustBrightness(playerColor, 30))
-        gradient.addColorStop(0.5, playerColor)
-        gradient.addColorStop(1, adjustBrightness(playerColor, -30))
+        const color = playerColor || getCSSVar('--player-1')
+        gradient.addColorStop(0, adjustBrightness(color, 30))
+        gradient.addColorStop(0.5, color)
+        gradient.addColorStop(1, adjustBrightness(color, -30))
         
         ctx.beginPath()
         ctx.moveTo(x, y - size)
@@ -623,7 +623,7 @@ export default function BoardCanvas({
         
         ctx.fillStyle = gradient
         ctx.fill()
-        ctx.strokeStyle = '#000'
+        ctx.strokeStyle = getCSSVar('--foreground')
         ctx.lineWidth = 2
         ctx.lineJoin = 'round'
         ctx.stroke()
@@ -633,7 +633,7 @@ export default function BoardCanvas({
         ctx.moveTo(x - 8, y - 3)
         ctx.lineTo(x, y - 10)
         ctx.lineTo(x + 8, y - 3)
-        ctx.strokeStyle = adjustBrightness(playerColor, 50)
+        ctx.strokeStyle = adjustBrightness(playerColor || getCSSVar('--player-1'), 50)
         ctx.lineWidth = 1
         ctx.stroke()
       } else if (building.type === BuildingType.City) {
@@ -643,9 +643,10 @@ export default function BoardCanvas({
           x, y - size,
           x, y + 10
         )
-        gradient.addColorStop(0, adjustBrightness(playerColor, 30))
-        gradient.addColorStop(0.5, playerColor)
-        gradient.addColorStop(1, adjustBrightness(playerColor, -30))
+        const color = playerColor || getCSSVar('--player-1')
+        gradient.addColorStop(0, adjustBrightness(color, 30))
+        gradient.addColorStop(0.5, color)
+        gradient.addColorStop(1, adjustBrightness(color, -30))
         
         ctx.beginPath()
         ctx.moveTo(x - 12, y + 10)
@@ -666,13 +667,13 @@ export default function BoardCanvas({
         
         ctx.fillStyle = gradient
         ctx.fill()
-        ctx.strokeStyle = '#000'
+        ctx.strokeStyle = getCSSVar('--foreground')
         ctx.lineWidth = 2
         ctx.lineJoin = 'round'
         ctx.stroke()
         
         // Add tower highlights
-        ctx.strokeStyle = adjustBrightness(playerColor, 50)
+        ctx.strokeStyle = adjustBrightness(playerColor || getCSSVar('--player-1'), 50)
         ctx.lineWidth = 1
         ctx.beginPath()
         ctx.moveTo(x - 6, y - 8)
@@ -683,7 +684,7 @@ export default function BoardCanvas({
       }
       ctx.restore()
     })
-  }
+  }, [board, PLAYER_COLORS, adjustBrightness, getCSSVar])
 
   // Main drawing effect
   useEffect(() => {
@@ -693,7 +694,7 @@ export default function BoardCanvas({
     const ctx = canvas.getContext('2d')!
     
     // Clear canvas with proper background
-    ctx.fillStyle = darkMode ? '#18181b' : '#fafafa' // zinc-900 for dark, zinc-50 for light
+    ctx.fillStyle = getCSSVar('--canvas-bg')
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     
     // Save context state
@@ -734,7 +735,7 @@ export default function BoardCanvas({
     
     // Restore context state
     ctx.restore()
-  }, [board, pan, selectedHex, selectedVertex, selectedEdge, viewOptions, darkMode])
+  }, [board, pan, selectedHex, selectedVertex, selectedEdge, viewOptions, darkMode, drawBuildings, drawGlobalEdges, drawHex, drawVertices, getCSSVar])
 
   return (
     <div className="w-full h-full flex items-center justify-center overflow-hidden">

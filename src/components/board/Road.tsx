@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { GlobalEdge, GlobalVertex, ROAD_WIDTH } from '@/models/board.models'
 
 interface RoadProps {

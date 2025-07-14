@@ -8,6 +8,31 @@ export enum Resource {
   Ore = 'Ore'
 }
 
+// Building costs (standard Catan)
+export const BUILDING_COSTS = {
+  Settlement: {
+    [Resource.Wood]: 1,
+    [Resource.Brick]: 1,
+    [Resource.Sheep]: 1,
+    [Resource.Wheat]: 1,
+    [Resource.Ore]: 0
+  },
+  City: {
+    [Resource.Wood]: 0,
+    [Resource.Brick]: 0,
+    [Resource.Sheep]: 0,
+    [Resource.Wheat]: 2,
+    [Resource.Ore]: 3
+  },
+  Road: {
+    [Resource.Wood]: 1,
+    [Resource.Brick]: 1,
+    [Resource.Sheep]: 0,
+    [Resource.Wheat]: 0,
+    [Resource.Ore]: 0
+  }
+}
+
 export enum MarketPair {
   WoodBrick = 'Wo-B',
   WoodSheep = 'Wo-S',
@@ -22,6 +47,7 @@ export enum MarketPair {
 }
 
 export interface AMMPool {
+  id: string; // Unique market ID (e.g., "vertex-123")
   market: MarketPair;
   resourceA: Resource;
   resourceB: Resource;
@@ -29,6 +55,8 @@ export interface AMMPool {
   reserveB: number;
   isActive: boolean;
   k: number; // Constant product
+  owner?: number; // Player who owns the port
+  vertexId: string; // The vertex where this market is located
 }
 
 export interface Port {

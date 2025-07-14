@@ -1,4 +1,3 @@
-import React from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,9 +18,10 @@ interface HeaderProps {
   onCenterView: () => void
   darkMode: boolean
   toggleDarkMode: () => void
+  onSkipSetup?: () => void
 }
 
-export default function Header({ viewOptions, onViewOptionsChange, onNewBoard, onCenterView, darkMode, toggleDarkMode }: HeaderProps) {
+export default function Header({ viewOptions, onViewOptionsChange, onNewBoard, onCenterView, darkMode, toggleDarkMode, onSkipSetup }: HeaderProps) {
 
   return (
     <header className={cn("h-16 bg-background border-b border-border flex items-center justify-between px-6")}>
@@ -117,6 +117,10 @@ export default function Header({ viewOptions, onViewOptionsChange, onNewBoard, o
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onCenterView}>
               Center View
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onSkipSetup?.()}>
+              Skip Setup (Testing)
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

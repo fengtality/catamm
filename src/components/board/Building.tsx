@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { 
   GlobalVertex, 
   Building as BuildingModel, 
@@ -54,10 +54,7 @@ export default function Building({ vertex, building, isSelected, onClick }: Buil
           stroke={isSelected ? 'var(--selection-primary)' : 'var(--background)'}
           strokeWidth={isSelected ? 4 : 2}
           strokeLinejoin="round"
-          className={isSelected ? 'animate-pulse' : ''}
-          style={{
-            filter: isSelected ? 'drop-shadow(0 0 8px var(--selection-primary))' : undefined
-          }}
+          className=""
         />
         
         {/* Roof highlight */}
@@ -76,64 +73,64 @@ export default function Building({ vertex, building, isSelected, onClick }: Buil
       </g>
     )
   } else {
-    // City - Simple castle icon
+    // City - Simple castle silhouette
     const size = BUILDING_CITY_SIZE
     const halfSize = size / 2
+    const towerWidth = size * 0.3
+    const towerHeight = size * 0.25
     
     return (
       <g className="city" onClick={onClick} style={{ cursor: 'pointer' }}>
         {/* Shadow */}
-        <rect
-          x={x - halfSize}
-          y={y - halfSize + 4}
-          width={size}
-          height={size}
+        <path
+          d={`
+            M ${x - halfSize} ${y - halfSize + towerHeight}
+            L ${x - halfSize} ${y + halfSize}
+            L ${x + halfSize} ${y + halfSize}
+            L ${x + halfSize} ${y - halfSize + towerHeight}
+            L ${x + halfSize} ${y - halfSize}
+            L ${x + halfSize - towerWidth} ${y - halfSize}
+            L ${x + halfSize - towerWidth} ${y - halfSize + towerHeight}
+            L ${x - halfSize + towerWidth} ${y - halfSize + towerHeight}
+            L ${x - halfSize + towerWidth} ${y - halfSize}
+            L ${x - halfSize} ${y - halfSize}
+            Z
+          `}
           fill="var(--shadow-medium)"
           transform="translate(4, 4)"
         />
         
-        {/* Main castle body */}
-        <rect
-          x={x - halfSize}
-          y={y - halfSize + 4}
-          width={size}
-          height={size}
+        {/* Main castle shape */}
+        <path
+          d={`
+            M ${x - halfSize} ${y - halfSize + towerHeight}
+            L ${x - halfSize} ${y + halfSize}
+            L ${x + halfSize} ${y + halfSize}
+            L ${x + halfSize} ${y - halfSize + towerHeight}
+            L ${x + halfSize} ${y - halfSize}
+            L ${x + halfSize - towerWidth} ${y - halfSize}
+            L ${x + halfSize - towerWidth} ${y - halfSize + towerHeight}
+            L ${x - halfSize + towerWidth} ${y - halfSize + towerHeight}
+            L ${x - halfSize + towerWidth} ${y - halfSize}
+            L ${x - halfSize} ${y - halfSize}
+            Z
+          `}
           fill={playerColor}
           stroke={isSelected ? 'var(--selection-primary)' : 'var(--background)'}
-          strokeWidth={isSelected ? 5 : 3}
-          className={isSelected ? 'animate-pulse' : ''}
-          style={{
-            filter: isSelected ? 'drop-shadow(0 0 8px var(--selection-primary))' : undefined
-          }}
+          strokeWidth={isSelected ? 4 : 2}
+          strokeLinejoin="round"
         />
         
-        {/* Castle towers */}
-        <rect
-          x={x - halfSize}
-          y={y - halfSize - 4}
-          width={size * 0.3}
-          height={size * 0.3}
-          fill={playerColor}
-          stroke={isSelected ? 'var(--selection-primary)' : 'var(--background)'}
-          strokeWidth={isSelected ? 3 : 2}
-        />
-        <rect
-          x={x - size * 0.15}
-          y={y - halfSize - 4}
-          width={size * 0.3}
-          height={size * 0.3}
-          fill={playerColor}
-          stroke={isSelected ? 'var(--selection-primary)' : 'var(--background)'}
-          strokeWidth={isSelected ? 3 : 2}
-        />
-        <rect
-          x={x + halfSize - size * 0.3}
-          y={y - halfSize - 4}
-          width={size * 0.3}
-          height={size * 0.3}
-          fill={playerColor}
-          stroke={isSelected ? 'var(--selection-primary)' : 'var(--background)'}
-          strokeWidth={isSelected ? 3 : 2}
+        {/* Castle highlight detail */}
+        <line
+          x1={x - halfSize + towerWidth}
+          y1={y - halfSize + towerHeight * 1.5}
+          x2={x + halfSize - towerWidth}
+          y2={y - halfSize + towerHeight * 1.5}
+          stroke={playerColor}
+          strokeWidth={2}
+          opacity={0.5}
+          style={{ filter: 'brightness(1.5)' }}
         />
       </g>
     )

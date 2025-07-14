@@ -12,10 +12,15 @@ export interface ViewOptions {
   boardSize: number
 }
 
+import { DevCard } from '@/types/development-cards'
+
 export interface GameState {
   currentPlayer: number
   turn: number
   phase: 'setup' | 'play' | 'end'
   playerResources: Record<number, Record<string, number>>
   playerSOL: Record<number, number>
+  playerDevCards: Record<number, DevCard[]>
+  largestArmyPlayer?: number  // Player with largest army (3+ knights)
+  knightsPlayed: Record<number, number>  // Count of knights played per player
 }

@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { GlobalVertex, Building as BuildingModel } from '@/models/board.models'
 import Building from './Building'
 import VertexInteractive from './VertexInteractive'
@@ -10,6 +10,8 @@ interface VertexLayerProps {
   selectedVertex: string | null
   showVertices: boolean
   showPortable: boolean
+  gamePhase?: string
+  setupBuildings?: number
   onVertexClick: (vertexId: string | null) => void
 }
 
@@ -20,8 +22,12 @@ export default function VertexLayer({
   selectedVertex,
   showVertices,
   showPortable,
+  gamePhase,
+  setupBuildings,
   onVertexClick
 }: VertexLayerProps) {
+  // Check if we should show pulsing effect
+  const shouldPulse = gamePhase === 'setup' && setupBuildings === 0 && !selectedVertex
   return (
     <g className="vertex-layer">
       {/* Render buildings first */}
@@ -56,6 +62,7 @@ export default function VertexLayer({
             vertex={vertex}
             isPortable={isPortable}
             isSelected={selectedVertex === vertexId}
+            shouldPulse={shouldPulse}
             onClick={() => onVertexClick(vertexId)}
           />
         )

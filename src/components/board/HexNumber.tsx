@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { 
   NUMBER_TOKEN_RADIUS,
   NUMBER_TOKEN_FONT_SIZE,

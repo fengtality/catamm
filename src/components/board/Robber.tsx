@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { ROBBER_SIZE } from '@/models/board.models'
 
 interface RobberProps {

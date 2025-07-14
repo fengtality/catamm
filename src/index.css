@@ -9,6 +9,8 @@
 
 @layer base {
   :root {
+    /* Font size scaling - adjust this value to scale all text (1 = normal, 0.9 = 10% smaller) */
+    --font-scale: 0.85;
     --background: oklch(1.0000 0 0);
     --foreground: oklch(0.1448 0 0);
     --card: oklch(1.0000 0 0);
@@ -82,9 +84,10 @@
     --shadow-medium: oklch(0 0 0 / 0.3);
     --shadow-light: oklch(0 0 0 / 0.2);
     
-    /* Selection colors */
-    --selection-primary: oklch(0.7 0.15 220);
-    --selection-secondary: oklch(0.8 0.1 220);
+    /* Selection colors - fluorescent green */
+    --selection-primary: oklch(0.85 0.3 140);    /* Bright fluorescent green */
+    --selection-secondary: oklch(0.9 0.25 140);  /* Lighter fluorescent green */
+    --selection-port: oklch(0.65 0.25 265);      /* Blue for portable vertices */
     
     /* Fill opacity classes */
     --fill-opacity-10: 0.1;
@@ -172,9 +175,10 @@
     --shadow-medium: oklch(0 0 0 / 0.5);
     --shadow-light: oklch(0 0 0 / 0.3);
     
-    /* Selection colors - brighter in dark mode */
-    --selection-primary: oklch(0.75 0.2 220);
-    --selection-secondary: oklch(0.85 0.15 220);
+    /* Selection colors - fluorescent green in dark mode */
+    --selection-primary: oklch(0.9 0.35 140);    /* Bright fluorescent green */
+    --selection-secondary: oklch(0.95 0.3 140);  /* Lighter fluorescent green */
+    --selection-port: oklch(0.7 0.3 265);        /* Blue for portable vertices */
     
     /* Fill opacity classes */
     --fill-opacity-10: 0.1;
@@ -191,6 +195,7 @@
   }
   body {
     letter-spacing: var(--tracking-normal);
+    font-size: calc(1rem * var(--font-scale));
   }
 }
 
@@ -446,4 +451,20 @@
 
 .hover\:stroke-opacity-20:hover {
   stroke-opacity: 0.2;
+}
+
+/* Pulsing animation for setup guidance */
+@keyframes setup-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    stroke-width: 2;
+  }
+  50% {
+    opacity: 1;
+    stroke-width: 3;
+  }
+}
+
+.animate-setup-pulse {
+  animation: setup-pulse 1.5s ease-in-out infinite;
 }

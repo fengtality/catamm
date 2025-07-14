@@ -1,4 +1,3 @@
-import React from 'react'
 
 interface PlayerVP {
   playerId: number
@@ -7,45 +6,51 @@ interface PlayerVP {
   cities: number
   largestArmy: number
   longestRoad: number
+  devCardVP?: number
 }
 
 interface LeaderboardProps {
   players: PlayerVP[]
   currentPlayer: number
-  currentTurn: number
 }
 
-export default function Leaderboard({ players, currentPlayer, currentTurn }: LeaderboardProps) {
-  // Sort players by VP descending
-  const sortedPlayers = [...players].sort((a, b) => b.totalVP - a.totalVP)
+export default function Leaderboard({ players, currentPlayer }: LeaderboardProps) {
+  // Show players in turn order (by playerId)
+  const sortedPlayers = [...players].sort((a, b) => a.playerId - b.playerId)
   const maxVP = 10 // Victory condition
   
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-mono font-semibold">Leaderboard</h3>
-        <span className="text-sm font-mono text-muted-foreground">Turn {currentTurn}</span>
-      </div>
+      <h3 className="text-lg font-mono font-semibold mb-3">Players</h3>
       <div className="space-y-3">
-        {sortedPlayers.map((player, index) => {
+        {sortedPlayers.map((player) => {
           const percentage = (player.totalVP / maxVP) * 100
           
           const isCurrentPlayer = player.playerId === currentPlayer
+          const playerColor = `var(--player-${player.playerId})`
           
           return (
-            <div key={player.playerId} className={`space-y-1 p-2 -mx-2 rounded ${isCurrentPlayer ? 'bg-accent' : ''}`}>
-              {/* Player rank and VP */}
+            <div 
+              key={player.playerId} 
+              className="space-y-1 p-2 -mx-2 rounded-sm"
+              style={isCurrentPlayer ? { 
+                borderColor: playerColor,
+                borderWidth: '2px',
+                borderStyle: 'solid'
+              } : {}}
+            >
+              {/* Player and VP */}
               <div className="flex items-center justify-between text-sm font-mono">
                 <span className="font-medium flex items-center gap-2">
                   <span className="flex items-center gap-1">
-                    {index + 1}.
                     <span 
                       className="w-4 h-4 rounded border border-border"
-                      style={{ backgroundColor: `var(--player-${player.playerId})` }}
+                      style={{ backgroundColor: playerColor }}
                     />
-                    Player {player.playerId}
+                    <span style={{ color: playerColor }}>
+                      Player {player.playerId}
+                    </span>
                   </span>
-                  {isCurrentPlayer && <span className="text-xs text-muted-foreground">(Current)</span>}
                 </span>
                 <span className="font-semibold">{player.totalVP}VP</span>
               </div>
@@ -56,18 +61,15 @@ export default function Leaderboard({ players, currentPlayer, currentTurn }: Lea
                   className="h-full transition-all duration-300"
                   style={{ 
                     width: `${percentage}%`,
-                    backgroundColor: `var(--player-${player.playerId})`
+                    backgroundColor: playerColor
                   }}
                 />
               </div>
               
               {/* VP breakdown */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-end">
                 <span className="text-xs font-mono text-muted-foreground">
-                  {percentage.toFixed(0)}%
-                </span>
-                <span className="text-xs font-mono text-muted-foreground">
-                  S:{player.settlements} C:{player.cities} LA:{player.largestArmy} LR:{player.longestRoad}
+                  S:{player.settlements} C:{player.cities}{player.devCardVP ? ` VP:${player.devCardVP}` : ''} LA:{player.largestArmy} LR:{player.longestRoad}
                 </span>
               </div>
             </div>

@@ -1,5 +1,4 @@
 
-import React from 'react'
 import { Board, BuildingType } from '@/models/board.models'
 import { getPortableVertices, getPerimeterEdges } from '@/models/board.initialization'
 
@@ -27,6 +26,8 @@ export default function SelectionInfo({
     
     if (selectedHex !== null && board) {
       const hex = board.hexes[selectedHex]
+      if (!hex) return null
+      
       return (
         <div className="flex items-center space-x-6 text-sm font-mono">
           <h4 className="font-semibold">Hex {selectedHex}</h4>

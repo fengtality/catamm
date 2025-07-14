@@ -1,12 +1,16 @@
 
-import React, { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { GameLogEntry } from '../shared/types'
+import { Input } from '@/components/ui/input'
 
 interface GameLogProps {
   entries: GameLogEntry[]
+  onCommand?: (command: string) => void
+  currentPlayer?: number
 }
 
-export default function GameLog({ entries }: GameLogProps) {
+export default function GameLog({ entries, onCommand, currentPlayer }: GameLogProps) {
+  const [chatInput, setChatInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -28,16 +32,23 @@ export default function GameLog({ entries }: GameLogProps) {
     }
   }
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (chatInput.trim() && onCommand) {
+      onCommand(chatInput)
+      setChatInput('')
+    }
+  }
+
   return (
-    <div className="h-full flex flex-col p-4">
-      <h3 className="text-lg font-mono font-semibold mb-3">Game Log</h3>
+    <div className="h-full flex flex-col">
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto font-mono text-xs space-y-1"
+        className="flex-1 overflow-y-auto font-mono text-xs space-y-1 p-4"
       >
         {entries.length === 0 ? (
           <div className="text-muted-foreground">
-            Game started. Type 'help' for commands.
+            Game started. Type &apos;help&apos; for commands.
           </div>
         ) : (
           entries.map((entry) => (
@@ -53,6 +64,19 @@ export default function GameLog({ entries }: GameLogProps) {
           ))
         )}
       </div>
+      {onCommand && (
+        <div className="border-t border-sidebar-border flex-shrink-0">
+          <form onSubmit={handleSubmit} className="p-4">
+            <Input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="> chat..."
+              className="font-mono focus-visible:ring-offset-0"
+            />
+          </form>
+        </div>
+      )}
     </div>
   )
 }

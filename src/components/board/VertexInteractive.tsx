@@ -1,10 +1,11 @@
-import React from 'react'
-import { GlobalVertex, VERTEX_RADIUS, VERTEX_RADIUS_SELECTED } from '@/models/board.models'
+
+import { GlobalVertex, VERTEX_RADIUS } from '@/models/board.models'
 
 interface VertexInteractiveProps {
   vertex: GlobalVertex
   isPortable: boolean
   isSelected: boolean
+  shouldPulse?: boolean
   onClick: () => void
 }
 
@@ -12,34 +13,33 @@ export default function VertexInteractive({
   vertex,
   isPortable,
   isSelected,
+  shouldPulse = false,
   onClick
 }: VertexInteractiveProps) {
   const { x, y } = vertex.position
-  const radius = isSelected && isPortable ? VERTEX_RADIUS_SELECTED : VERTEX_RADIUS
+  const radius = VERTEX_RADIUS
   
   const fillColor = isSelected 
-    ? isPortable 
-      ? 'var(--selection-primary)' 
-      : 'var(--selection-secondary)'
+    ? 'var(--selection-primary)'
     : isPortable
-      ? 'var(--selection-primary)'
+      ? 'var(--selection-port)'
       : 'var(--background)'
   
-  const strokeColor = isSelected && isPortable
-    ? 'var(--selection-primary)'
-    : 'var(--foreground)'
+  const strokeColor = 'var(--foreground)'
 
   return (
     <g className="vertex-interactive" onClick={onClick}>
-      {/* Glow effect for selected portable */}
-      {isSelected && isPortable && (
+      
+      {/* Pulsing ring for setup guidance */}
+      {shouldPulse && (
         <circle
           cx={x}
           cy={y}
-          r={radius + 5}
-          fill={fillColor}
-          opacity={0.3}
-          className="animate-pulse"
+          r={radius + 4}
+          fill="none"
+          stroke="var(--selection-primary)"
+          strokeWidth={2}
+          className="animate-setup-pulse"
         />
       )}
       
@@ -50,27 +50,9 @@ export default function VertexInteractive({
         r={radius}
         fill={fillColor}
         stroke={strokeColor}
-        strokeWidth={isSelected && isPortable ? 3 : 1}
-        className={isSelected ? 'animate-pulse' : ''}
-        style={{
-          filter: isSelected && isPortable ? 'drop-shadow(0 0 8px var(--selection-primary))' : undefined,
-          transition: 'all 0.2s ease'
-        }}
+        strokeWidth={isSelected ? 2 : 1}
+        className=""
       />
-      
-      {/* Label for selected portable */}
-      {isSelected && isPortable && (
-        <text
-          x={x}
-          y={y}
-          textAnchor="middle"
-          dominantBaseline="central"
-          className="fill-background text-sm font-bold font-mono select-none"
-          style={{ pointerEvents: 'none' }}
-        >
-          P
-        </text>
-      )}
       
       {/* Invisible click area */}
       <circle

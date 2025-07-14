@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { Hex } from '@/models/board.models'
 import HexTile from './HexTile'
 
@@ -6,6 +6,7 @@ interface HexGridProps {
   hexes: Hex[]
   selectedHex: number | null
   showHexNumbers: boolean
+  isMovingRobber?: boolean
   onHexClick: (hexIndex: number | null) => void
 }
 
@@ -13,6 +14,7 @@ export default function HexGrid({
   hexes,
   selectedHex,
   showHexNumbers,
+  isMovingRobber = false,
   onHexClick
 }: HexGridProps) {
   return (
@@ -23,7 +25,8 @@ export default function HexGrid({
           hex={hex}
           isSelected={selectedHex === hex.index}
           showNumber={showHexNumbers}
-          onClick={() => onHexClick(hex.index)}
+          isSelectable={isMovingRobber}
+          onClick={() => isMovingRobber ? onHexClick(hex.index) : undefined}
         />
       ))}
     </g>

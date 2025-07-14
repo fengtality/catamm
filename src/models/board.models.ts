@@ -114,6 +114,8 @@ export interface Board {
   robberLocation: number; // hex index where robber is located
   buildings: Map<string, Building>; // vertexId -> Building
   roads: Map<string, number>; // edgeId -> player number
+  portsAtVertices: Set<string>; // vertex ids that have ports
+  hexesUsedInPorts: Set<number>; // hex indices that are part of existing ports
 }
 
 
@@ -166,8 +168,11 @@ export function generateHexLayout(rings: number): HexLayoutDefinition[] {
         
         // Move to next position unless it's the last hex of the ring
         if (!(side === 5 && step === ring - 1)) {
-          currentQ += moveDirections[side].q;
-          currentR += moveDirections[side].r;
+          const direction = moveDirections[side];
+          if (direction) {
+            currentQ += direction.q;
+            currentR += direction.r;
+          }
         }
       }
     }

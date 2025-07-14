@@ -1,6 +1,5 @@
-import React from 'react'
+
 import { Hex, HEX_RADIUS } from '@/models/board.models'
-import { Resource } from '@/types'
 import HexShape from './HexShape'
 import HexNumber from './HexNumber'
 import Robber from './Robber'
@@ -9,13 +8,15 @@ interface HexTileProps {
   hex: Hex
   isSelected: boolean
   showNumber: boolean
-  onClick: () => void
+  isSelectable?: boolean
+  onClick?: () => void
 }
 
 export default function HexTile({
   hex,
   isSelected,
   showNumber,
+  isSelectable = false,
   onClick
 }: HexTileProps) {
   // Create points for hex polygon
@@ -24,12 +25,13 @@ export default function HexTile({
     .join(' ')
 
   return (
-    <g className="hex-tile" onClick={onClick}>
+    <g className="hex-tile" onClick={isSelectable ? onClick : undefined}>
       {/* Main hex shape */}
       <HexShape
         points={points}
         resource={hex.resource}
         isSelected={isSelected}
+        hasRobber={hex.hasRobber}
       />
       
       {/* Hex border */}
@@ -37,9 +39,8 @@ export default function HexTile({
         points={points}
         fill="none"
         stroke="var(--hex-border)"
-        strokeWidth={isSelected ? 3 : 1.5}
+        strokeWidth={isSelected ? 2.5 : 1.5}
         strokeLinejoin="round"
-        className={isSelected ? 'animate-pulse' : ''}
       />
       
       {/* Hex index */}
@@ -77,12 +78,14 @@ export default function HexTile({
         />
       )}
       
-      {/* Invisible click area */}
-      <polygon
-        points={points}
-        fill="transparent"
-        className="cursor-pointer hover:fill-white hover:fill-opacity-10"
-      />
+      {/* Invisible click area - only when selectable */}
+      {isSelectable && (
+        <polygon
+          points={points}
+          fill="transparent"
+          className="cursor-pointer hover:fill-white hover:fill-opacity-10"
+        />
+      )}
     </g>
   )
 }

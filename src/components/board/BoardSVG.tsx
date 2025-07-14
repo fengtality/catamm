@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react'
+import React, { useRef, useState, useCallback } from 'react'
 import { Board, CANVAS_WIDTH, CANVAS_HEIGHT } from '@/models/board.models'
 import { ViewOptions } from '../shared/types'
 import HexGrid from './HexGrid'
@@ -12,6 +12,10 @@ interface BoardSVGProps {
   selectedVertex: string | null
   selectedEdge: string | null
   viewOptions: ViewOptions
+  isMovingRobber?: boolean
+  gamePhase?: string
+  setupBuildings?: number
+  currentPlayer?: number
   onHexClick: (hexIndex: number | null) => void
   onVertexClick: (vertexId: string | null) => void
   onEdgeClick: (edgeId: string | null) => void
@@ -23,6 +27,10 @@ export default function BoardSVG({
   selectedVertex,
   selectedEdge,
   viewOptions,
+  isMovingRobber = false,
+  gamePhase,
+  setupBuildings,
+  currentPlayer,
   onHexClick,
   onVertexClick,
   onEdgeClick
@@ -128,6 +136,7 @@ export default function BoardSVG({
           hexes={board.hexes}
           selectedHex={selectedHex}
           showHexNumbers={viewOptions.showHexNumbers}
+          isMovingRobber={isMovingRobber}
           onHexClick={onHexClick}
         />
 
@@ -136,7 +145,11 @@ export default function BoardSVG({
           edges={board.globalEdges}
           vertices={board.globalVertices}
           roads={board.roads}
+          buildings={board.buildings}
           selectedEdge={selectedEdge}
+          gamePhase={gamePhase}
+          setupBuildings={setupBuildings}
+          currentPlayer={currentPlayer}
           onEdgeClick={onEdgeClick}
         />
 
@@ -148,6 +161,8 @@ export default function BoardSVG({
           selectedVertex={selectedVertex}
           showVertices={viewOptions.showVertices}
           showPortable={viewOptions.showPortable}
+          gamePhase={gamePhase}
+          setupBuildings={setupBuildings}
           onVertexClick={onVertexClick}
         />
       </svg>

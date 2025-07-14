@@ -192,35 +192,52 @@ function assignResourcesAndNumbers(hexes: Hex[]): void {
   // Generate tokens by random selection from weighted distribution
   for (let i = 0; i < nonDesertCount; i++) {
     const randomIndex = Math.floor(Math.random() * weightedNumbers.length);
-    numberTokens.push(weightedNumbers[randomIndex]);
+    const selectedNumber = weightedNumbers[randomIndex];
+    if (selectedNumber !== undefined) {
+      numberTokens.push(selectedNumber);
+    }
   }
   
   // Shuffle resources
   for (let i = resources.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [resources[i], resources[j]] = [resources[j], resources[i]];
+    const temp = resources[i];
+    if (resources[j] !== undefined) {
+      resources[i] = resources[j];
+    }
+    if (temp !== undefined) {
+      resources[j] = temp;
+    }
   }
   
   // Assign resources
   hexes.forEach((hex, i) => {
-    hex.resource = resources[i];
+    hex.resource = resources[i] ?? null;
   });
   
   // Find desert and place robber
   const desertIndex = hexes.findIndex(h => h.resource === null);
-  hexes[desertIndex].hasRobber = true;
+  if (desertIndex >= 0 && hexes[desertIndex]) {
+    hexes[desertIndex].hasRobber = true;
+  }
   
   // Shuffle the number tokens
   for (let i = numberTokens.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [numberTokens[i], numberTokens[j]] = [numberTokens[j], numberTokens[i]];
+    const temp = numberTokens[i];
+    if (numberTokens[j] !== undefined) {
+      numberTokens[i] = numberTokens[j];
+    }
+    if (temp !== undefined) {
+      numberTokens[j] = temp;
+    }
   }
   
   // Place numbers on non-desert hexes
   let tokenIndex = 0;
   hexes.forEach((hex) => {
     if (hex.resource !== null) {
-      hex.numberToken = numberTokens[tokenIndex++];
+      hex.numberToken = numberTokens[tokenIndex++] ?? null;
     }
   });
 }
@@ -264,7 +281,9 @@ export function initializeBoard(boardSize: number = 2, customCenter?: { x: numbe
     globalEdges,
     robberLocation,
     buildings: new Map(),
-    roads: new Map()
+    roads: new Map(),
+    portsAtVertices: new Set(),
+    hexesUsedInPorts: new Set()
   };
 }
 
@@ -286,7 +305,7 @@ export function getPerimeterVertices(board: Board): string[] {
   const perimeterVertexIds: string[] = [];
   const perimeterEdges = new Set(getPerimeterEdges(board));
   
-  board.globalVertices.forEach((vertex, id) => {
+  board.globalVertices.forEach((_vertex, id) => {
     // A vertex is on the perimeter if it's part of at least one perimeter edge
     const isPerimeter = Array.from(board.globalEdges.values()).some(edge => 
       perimeterEdges.has(edge.id) && edge.vertices.includes(id)
@@ -309,8 +328,16 @@ export function getPortableVertices(board: Board): string[] {
     // A vertex is portable if it's:
     // 1. On the perimeter
     // 2. Shared by exactly 2 hexes
+    // 3. Neither of its adjacent hexes are already used in ports
     if (perimeterVertices.has(id) && vertex.hexes.length === 2) {
-      portableVertexIds.push(id);
+      // Check if any adjacent hex is already used in a port
+      const hasUsedHex = vertex.hexes.some(vh => 
+        board.hexesUsedInPorts.has(vh.hexIndex)
+      );
+      
+      if (!hasUsedHex) {
+        portableVertexIds.push(id);
+      }
     }
   });
   
@@ -330,6 +357,8 @@ export function findValidHexPositions(board: Board, vertexId: string): Array<{q:
   
   // For each adjacent hex, check all 6 neighbor positions
   adjacentHexes.forEach(hex => {
+    if (!hex) return;
+    
     const directions = [
       { q: 1, r: 0 }, { q: 0, r: 1 }, { q: -1, r: 1 },
       { q: -1, r: 0 }, { q: 0, r: -1 }, { q: 1, r: -1 }
@@ -421,7 +450,9 @@ export function addHexToBoard(
     globalEdges: newGlobalEdges,
     robberLocation: board.robberLocation,
     buildings: board.buildings,
-    roads: board.roads
+    roads: board.roads,
+    portsAtVertices: board.portsAtVertices,
+    hexesUsedInPorts: board.hexesUsedInPorts
   };
 }
 
