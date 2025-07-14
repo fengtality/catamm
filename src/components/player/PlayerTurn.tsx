@@ -19,6 +19,7 @@ interface PlayerTurnProps {
   setupRound?: number
   setupBuildings?: number
   hasResourcesFor?: (purchaseType: 'Settlement' | 'City' | 'Road' | 'DevCard') => boolean
+  lastAction?: { message: string; type: 'success' | 'warning' | 'error' }
 }
 
 export default function PlayerTurn({ 
@@ -31,7 +32,8 @@ export default function PlayerTurn({
   gamePhase, 
   setupRound, 
   setupBuildings, 
-  hasResourcesFor 
+  hasResourcesFor,
+  lastAction
 }: PlayerTurnProps) {
   const playerColor = currentPlayer ? `var(--player-${currentPlayer})` : 'var(--foreground)'
   
@@ -53,21 +55,35 @@ export default function PlayerTurn({
     canPlayDevCard(card, currentTurn || 1)
   ).length || 0
   
+  const getActionColor = (type: 'success' | 'warning' | 'error') => {
+    switch (type) {
+      case 'success':
+        return 'text-green-600 dark:text-green-400'
+      case 'warning':
+        return 'text-yellow-600 dark:text-yellow-400'
+      case 'error':
+        return 'text-destructive'
+      default:
+        return 'text-muted-foreground'
+    }
+  }
+
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="inline-flex items-center gap-4 bg-card border border-border rounded-lg p-3 shadow-lg">
-        {/* Player info */}
-        <div className="flex items-center gap-3 pr-3 border-r border-border">
-          <span className="text-sm font-mono font-semibold" style={{ color: playerColor }}>
-            Player {currentPlayer}
-          </span>
-          <span className="text-xs font-mono text-muted-foreground">
-            {gamePhase === 'setup' ? `Setup ${setupRound}/2` : `Turn ${currentTurn}`}
-          </span>
-        </div>
-        
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+      <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+        <div className="inline-flex items-center gap-4">
+          {/* Player info */}
+          <div className="flex items-center gap-3 pr-3 border-r border-border">
+            <span className="text-sm font-mono font-semibold" style={{ color: playerColor }}>
+              Player {currentPlayer}
+            </span>
+            <span className="text-xs font-mono text-muted-foreground">
+              {gamePhase === 'setup' ? `Setup ${setupRound}/2` : `Turn ${currentTurn}`}
+            </span>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
           {/* Settlement */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -248,6 +264,16 @@ export default function PlayerTurn({
           </span>
         </div>
       </div>
+      
+      {/* Action Feedback */}
+      {lastAction && (
+        <div className="mt-2 px-1">
+          <p className={`text-xs font-mono ${getActionColor(lastAction.type)}`}>
+            {lastAction.message}
+          </p>
+        </div>
+      )}
+    </div>
     </TooltipProvider>
   )
 }

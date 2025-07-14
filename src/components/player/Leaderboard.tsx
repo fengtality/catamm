@@ -113,25 +113,25 @@ export default function Leaderboard({ players, currentPlayer, playerResources }:
                   {/* Victory Points Section */}
                   <div className="space-y-1">
                     <div className="font-semibold text-foreground">Victory Points</div>
-                    {player.settlements > 0 && (
+                    {!!player.settlements && (
                       <div>Settlements: {player.settlements} × 1 = {player.settlements}VP</div>
                     )}
-                    {player.cities > 0 && (
+                    {!!player.cities && (
                       <div>Cities: {player.cities} × 2 = {player.cities * 2}VP</div>
                     )}
-                    {player.largestArmy > 0 && (
+                    {!!player.largestArmy && (
                       <div>Largest Army: {player.largestArmy}VP</div>
                     )}
-                    {player.longestRoad > 0 && (
+                    {!!player.longestRoad && (
                       <div>Longest Road: {player.longestRoad}VP</div>
                     )}
-                    {player.devCardVP && player.devCardVP > 0 && (
+                    {!!player.devCardVP && (
                       <div>Dev Cards: {player.devCardVP}VP</div>
                     )}
                     {player.totalVP === 0 ? (
                       <div className="text-muted-foreground">No victory points yet</div>
                     ) : (
-                      <div className="border-t pt-1 font-semibold">Total: {player.totalVP}VP</div>
+                      <div className="font-semibold mt-1">Total: {player.totalVP}VP</div>
                     )}
                   </div>
                   

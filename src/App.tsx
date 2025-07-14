@@ -94,6 +94,7 @@ function App() {
   })
   const [gameLog, setGameLog] = useState<GameLogEntry[]>([])
   const logIdRef = useRef(0)
+  const [lastAction, setLastAction] = useState<{ message: string; type: 'success' | 'warning' | 'error' } | undefined>()
 
   const addLogEntry = useCallback((message: string, type: GameLogEntry['type'] = 'action') => {
     setGameLog(prev => [...prev, {
@@ -102,6 +103,33 @@ function App() {
       message,
       type
     }])
+    
+    // Update last action for PlayerTurn feedback
+    if (type === 'action' || type === 'system') {
+      // Determine action type based on message content
+      let actionType: 'success' | 'warning' | 'error' = 'success'
+      
+      // Error messages
+      if (message.includes('Not enough resources') || 
+          message.includes('Cannot') || 
+          message.includes('must be connected') ||
+          message.includes('Select') && message.includes('to build') ||
+          message.includes('Select') && message.includes('to upgrade')) {
+        actionType = 'error'
+      }
+      // Warning messages
+      else if (message.includes('Move the robber') || 
+               message.includes('no valid market') ||
+               message.includes('Unknown command')) {
+        actionType = 'warning'
+      }
+      // Success messages are the default
+      
+      setLastAction({ message, type: actionType })
+      
+      // Clear the message after 3 seconds
+      setTimeout(() => setLastAction(undefined), 3000)
+    }
   }, [])
 
   const handleNewBoard = useCallback((boardSize?: number) => {
@@ -924,6 +952,7 @@ function App() {
                   return available >= required
                 })
               }}
+              lastAction={lastAction}
             />
           </div>
           <div className="flex-1 overflow-hidden flex items-center justify-center">
