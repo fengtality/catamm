@@ -26,7 +26,6 @@ export default function PlayerTurn({
   onQuickAction, 
   currentPlayer, 
   currentTurn, 
-  playerResources, 
   playerDevCards, 
   playerDevCardsArray, 
   gamePhase, 

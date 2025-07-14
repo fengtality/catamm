@@ -3,7 +3,6 @@ import Header from './components/layout/Header'
 import LeftSidebar from './components/layout/LeftSidebar'
 import RightSidebar from './components/layout/RightSidebar'
 import BoardSVG from './components/board/BoardSVG'
-import SelectionInfo from './components/game/SelectionInfo'
 import PlayerTurn from './components/player/PlayerTurn'
 import { Board, BuildingType } from '@/models/board.models'
 import { initializeBoard } from '@/models/board.initialization'
@@ -50,7 +49,7 @@ function App() {
   })
 
   // Initialize player data based on NUM_PLAYERS
-  const initializePlayerData = () => {
+  const initializePlayerData = useCallback(() => {
     const playerResources: Record<number, Record<string, number>> = {}
     const playerSOL: Record<number, number> = {}
     const playerDevCards: Record<number, DevCard[]> = {}
@@ -64,7 +63,7 @@ function App() {
     }
     
     return { playerResources, playerSOL, playerDevCards, knightsPlayed }
-  }
+  }, [])
   
   const initialData = initializePlayerData()
   
@@ -154,7 +153,7 @@ function App() {
     addLogEntry(`New board generated with ${newBoard.hexes.length} hexes`, 'system')
     addLogEntry(`Setup Phase: ${NUM_PLAYERS} players, each places 2 settlements and 2 roads`, 'system')
     addLogEntry(`Player 1's turn - Setup Round 1`, 'system')
-  }, [viewOptions.boardSize, addLogEntry])
+  }, [viewOptions.boardSize, addLogEntry, initializePlayerData])
 
   // Initialize board on mount
   const boardInitialized = useRef(false)
@@ -889,7 +888,7 @@ function App() {
 
     // Check if player has enough resources
     const playerRes = gameState.playerResources[gameState.currentPlayer]
-    if (!playerRes || playerRes[resourceIn] < amountIn) {
+    if (!playerRes || (playerRes[resourceIn] || 0) < amountIn) {
       addLogEntry(`Not enough ${resourceIn}! You have ${playerRes?.[resourceIn] || 0}`, 'system')
       return
     }
@@ -926,11 +925,9 @@ function App() {
     if (!newPlayerResources[gameState.currentPlayer]) {
       newPlayerResources[gameState.currentPlayer] = createEmptyResourceSet()
     }
-    const currentPlayerRes = newPlayerResources[gameState.currentPlayer]
-    if (currentPlayerRes) {
-      currentPlayerRes[resourceIn] -= amountIn
-      currentPlayerRes[resourceOut] = (currentPlayerRes[resourceOut] || 0) + amountOut
-    }
+    const currentPlayerRes = newPlayerResources[gameState.currentPlayer]!
+    currentPlayerRes[resourceIn] = (currentPlayerRes[resourceIn] || 0) - amountIn
+    currentPlayerRes[resourceOut] = (currentPlayerRes[resourceOut] || 0) + amountOut
 
     // If there's a fee, give it to the market owner
     if (feeRate > 0 && market.owner) {

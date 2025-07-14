@@ -9,7 +9,7 @@ interface GameLogProps {
   currentPlayer?: number
 }
 
-export default function GameLog({ entries, onCommand, currentPlayer }: GameLogProps) {
+export default function GameLog({ entries, onCommand }: GameLogProps) {
   const [chatInput, setChatInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
