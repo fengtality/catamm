@@ -13,12 +13,6 @@ import { useTheme } from './hooks/useTheme'
 import { getPortableVertices } from '@/models/board.initialization'
 import { getMarketForPortableVertex, createMarket } from '@/utils/market-utils'
 import { AMMPool } from '@/types/game.types'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 
 // Game configuration
 const NUM_PLAYERS = 4 // Change this to set the number of players
@@ -1004,42 +998,26 @@ function App() {
             currentPlayer={gameState.currentPlayer}
           />
           {/* Sidebar toggle button */}
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
-                  className="absolute -right-10 top-1/2 -translate-y-1/2 w-10 h-24 flex items-center justify-center bg-card hover:bg-accent text-foreground hover:text-accent-foreground border border-border rounded-r-lg shadow-md hover:shadow-lg transition-all duration-200 group"
-                  aria-label={leftSidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <svg 
-                      className="w-4 h-4 transition-transform duration-300" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                      style={{ transform: leftSidebarVisible ? 'rotate(0deg)' : 'rotate(180deg)' }}
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M15 19l-7-7 7-7"
-                      />
-                    </svg>
-                    <div className="flex flex-col gap-0.5">
-                      <div className="w-1 h-1 rounded-full bg-current opacity-40 group-hover:opacity-100 transition-opacity" />
-                      <div className="w-1 h-1 rounded-full bg-current opacity-40 group-hover:opacity-100 transition-opacity" />
-                      <div className="w-1 h-1 rounded-full bg-current opacity-40 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </div>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p className="font-mono text-xs">{leftSidebarVisible ? 'Hide game log' : 'Show game log'}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <button
+            onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
+            className="absolute -right-10 top-1/2 -translate-y-1/2 w-10 h-24 flex items-center justify-center bg-card hover:bg-accent text-foreground hover:text-accent-foreground border border-border rounded-r-lg shadow-md hover:shadow-lg transition-all duration-200 group"
+            aria-label={leftSidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
+          >
+            <svg 
+              className="w-4 h-4 transition-transform duration-300" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+              style={{ transform: leftSidebarVisible ? 'rotate(0deg)' : 'rotate(180deg)' }}
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
         </div>
 
         {/* Main Board Area */}
