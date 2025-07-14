@@ -265,8 +265,8 @@ export default function PlayerTurn({
         </div>
       </div>
       
-      {/* Action Feedback */}
-      {lastAction && (
+      {/* Action Feedback - Only show errors */}
+      {lastAction && lastAction.type === 'error' && (
         <div className="mt-2 px-1">
           <p className={`text-xs font-mono ${getActionColor(lastAction.type)}`}>
             {lastAction.message}
