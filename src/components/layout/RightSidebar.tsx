@@ -31,6 +31,7 @@ interface RightSidebarProps {
   selectedHex?: number | null
   selectedEdge?: string | null
   showSelectionInfo?: boolean
+  onAMMSwap?: (marketId: string, resourceIn: Resource, amountIn: number, resourceOut: Resource, amountOut: number) => void
 }
 
 export default function RightSidebar({
@@ -53,7 +54,8 @@ export default function RightSidebar({
   hasResourcesFor,
   selectedHex,
   selectedEdge,
-  showSelectionInfo = false
+  showSelectionInfo = false,
+  onAMMSwap
 }: RightSidebarProps) {
   const [selectedMarket, setSelectedMarket] = useState<AMMPool | null>(null)
   
@@ -165,9 +167,9 @@ export default function RightSidebar({
   
     
   const handleSwap = (resourceIn: Resource, amountIn: number, resourceOut: Resource, amountOut: number) => {
-    // TODO: Implement actual swap logic
-    // For now, just log the parameters to avoid unused variable warnings
-    void { resourceIn, amountIn, resourceOut, amountOut }
+    if (activeMarket && onAMMSwap) {
+      onAMMSwap(activeMarket.id, resourceIn, amountIn, resourceOut, amountOut)
+    }
   }
   
   const handleDeposit = (amountA: number, amountB: number) => {

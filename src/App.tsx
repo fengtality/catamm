@@ -879,6 +879,99 @@ function App() {
     autoRollDice(1, 1000)
   }
 
+  // Handle AMM swaps
+  const handleAMMSwap = (marketId: string, resourceIn: Resource, amountIn: number, resourceOut: Resource, amountOut: number) => {
+    const market = activeMarkets.get(marketId)
+    if (!market || !market.isActive) {
+      addLogEntry('Market is not active', 'system')
+      return
+    }
+
+    // Check if player has enough resources
+    const playerRes = gameState.playerResources[gameState.currentPlayer]
+    if (!playerRes || playerRes[resourceIn] < amountIn) {
+      addLogEntry(`Not enough ${resourceIn}! You have ${playerRes?.[resourceIn] || 0}`, 'system')
+      return
+    }
+
+    // Calculate expected output with fees
+    const feeRate = market.owner === gameState.currentPlayer ? 0 : 0.1
+    const [reserveIn, reserveOut] = resourceIn === market.resourceA 
+      ? [market.reserveA, market.reserveB]
+      : [market.reserveB, market.reserveA]
+    
+    const amountInWithFee = amountIn * (1 - feeRate)
+    const expectedAmountOut = (reserveOut * amountInWithFee) / (reserveIn + amountInWithFee)
+    
+    // Verify the output matches what was calculated (within rounding tolerance)
+    if (Math.abs(Math.floor(expectedAmountOut) - amountOut) > 0.01) {
+      addLogEntry('Invalid swap calculation', 'system')
+      return
+    }
+
+    // Update reserves to maintain x*y=k invariant
+    const newReserveIn = reserveIn + amountInWithFee
+    const newReserveOut = reserveOut - amountOut
+    
+    // Verify constant product is maintained (within floating point tolerance)
+    const oldK = reserveIn * reserveOut
+    const newK = newReserveIn * newReserveOut
+    if (Math.abs(oldK - newK) > 0.0001 * oldK) {
+      addLogEntry('Swap would break constant product invariant', 'system')
+      return
+    }
+
+    // Update player resources
+    const newPlayerResources = { ...gameState.playerResources }
+    if (!newPlayerResources[gameState.currentPlayer]) {
+      newPlayerResources[gameState.currentPlayer] = createEmptyResourceSet()
+    }
+    const currentPlayerRes = newPlayerResources[gameState.currentPlayer]
+    if (currentPlayerRes) {
+      currentPlayerRes[resourceIn] -= amountIn
+      currentPlayerRes[resourceOut] = (currentPlayerRes[resourceOut] || 0) + amountOut
+    }
+
+    // If there's a fee, give it to the market owner
+    if (feeRate > 0 && market.owner) {
+      const feeAmount = amountIn * feeRate
+      if (!newPlayerResources[market.owner]) {
+        newPlayerResources[market.owner] = createEmptyResourceSet()
+      }
+      const ownerRes = newPlayerResources[market.owner]
+      if (ownerRes) {
+        ownerRes[resourceIn] = (ownerRes[resourceIn] || 0) + feeAmount
+      }
+    }
+
+    // Update market reserves
+    const updatedMarket = {
+      ...market,
+      reserveA: resourceIn === market.resourceA ? newReserveIn : newReserveOut,
+      reserveB: resourceIn === market.resourceA ? newReserveOut : newReserveIn,
+      k: newK
+    }
+
+    // Update state
+    setActiveMarkets(prev => {
+      const newMarkets = new Map(prev)
+      newMarkets.set(marketId, updatedMarket)
+      return newMarkets
+    })
+
+    setGameState(prev => ({
+      ...prev,
+      playerResources: newPlayerResources
+    }))
+
+    // Log the swap
+    const feeText = feeRate > 0 ? ` (${(amountIn * feeRate).toFixed(1)} ${resourceIn} fee to P${market.owner})` : ' (no fee)'
+    addLogEntry(
+      `Player ${gameState.currentPlayer} swapped ${amountIn} ${resourceIn} for ${amountOut} ${resourceOut}${feeText}`,
+      'action'
+    )
+  }
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       {/* Header */}
@@ -1027,6 +1120,7 @@ function App() {
           onVertexSelect={setSelectedVertex}
           numPlayers={NUM_PLAYERS}
           onQuickAction={handleQuickAction}
+          onAMMSwap={handleAMMSwap}
           currentTurn={gameState.turn}
           playerDevCards={Object.values(gameState.playerDevCards[gameState.currentPlayer] || []).length}
           playerDevCardsArray={gameState.playerDevCards[gameState.currentPlayer]}
